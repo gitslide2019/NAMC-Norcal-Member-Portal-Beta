@@ -17,24 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Claude Code
+        uses: anthropics/claude-code-action@main
         with:
-          node-version: '18'
-          
-      - name: Install Claude Code
-        run: |
-          npm install -g @anthropic-ai/claude-code
-          
-      - name: Run Claude Code
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          # Run Claude Code with the comment content
-          echo "Processing comment: ${{ github.event.comment.body }}"
-          # This is a placeholder - actual implementation would depend on Claude Code CLI
-          echo "Claude Code GitHub Actions integration is set up"
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
