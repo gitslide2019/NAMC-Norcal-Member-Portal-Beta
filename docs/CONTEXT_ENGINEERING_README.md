@@ -251,12 +251,21 @@ This context engineering system integrates best practices from the original cont
 - `CLAUDE.md` - Complete NAMC business rules and technical guidelines
 - `examples/` - Comprehensive code patterns and implementations
 - `PRPs/templates/` - Templates for creating implementation guides
+- `SHADCN_INTEGRATION_GUIDE.md` - Complete guide for integrating shadcn/ui components
+
+### UI Enhancement Options
+- **shadcn/ui Integration**: Government-compliant, accessible React components
+- **Accessibility Benefits**: WCAG 2.1 AA ready components built on Radix UI
+- **Next.js Compatible**: Works seamlessly with existing NAMC tech stack
+- **Component Ownership**: Full control over component code and customization
 
 ### External Documentation
 - [Next.js App Router](https://nextjs.org/docs/app/building-your-application/routing)
 - [Prisma ORM](https://www.prisma.io/docs/orm)
 - [React Hook Form](https://react-hook-form.com/docs)
 - [WCAG 2.1 AA Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- [shadcn/ui Documentation](https://ui.shadcn.com/docs)
+- [Radix UI Accessibility](https://www.radix-ui.com/primitives/docs/overview/accessibility)
 
 ---
 

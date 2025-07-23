@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "sequential": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": {},
+      "description": "Sequential thinking server for complex problem solving and architectural analysis"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "env": {},
+      "description": "Filesystem server for secure file operations with configurable access controls"
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {},
+      "description": "Knowledge graph-based persistent memory system"
+    },
+    "magic": {
+      "command": "npx",
+      "args": ["-y", "@21st-dev/magic"],
+      "env": {},
+      "description": "21st.dev Magic UI builder for creating modern UI components"
+    },
+    "figma-dev-mode-mcp-server": {
+      "url": "http://127.0.0.1:3845/sse",
+      "transport": "sse",
+      "description": "Figma Dev Mode integration for design-to-code workflows"
+    }
+  }
+}

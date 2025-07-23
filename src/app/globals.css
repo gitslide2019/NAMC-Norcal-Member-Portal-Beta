@@ -1,0 +1,268 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* Base UI Colors */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+
+    /* NAMC Brand Colors - Light Mode */
+    --namc-blue-50: 239 246 255;
+    --namc-blue-100: 219 234 254;
+    --namc-blue-200: 191 219 254;
+    --namc-blue-300: 147 197 253;
+    --namc-blue-400: 96 165 250;
+    --namc-blue-500: 59 130 246;
+    --namc-blue-600: 37 99 235;
+    --namc-blue-700: 29 78 216;
+    --namc-blue-800: 30 64 175;
+    --namc-blue-900: 30 58 138;
+
+    --namc-gray-50: 249 250 251;
+    --namc-gray-100: 243 244 246;
+    --namc-gray-200: 229 231 235;
+    --namc-gray-300: 209 213 219;
+    --namc-gray-400: 156 163 175;
+    --namc-gray-500: 107 114 128;
+    --namc-gray-600: 75 85 99;
+    --namc-gray-700: 55 65 81;
+    --namc-gray-800: 31 41 55;
+    --namc-gray-900: 17 24 39;
+
+    --namc-green-50: 240 253 244;
+    --namc-green-100: 220 252 231;
+    --namc-green-200: 187 247 208;
+    --namc-green-300: 134 239 172;
+    --namc-green-400: 74 222 128;
+    --namc-green-500: 34 197 94;
+    --namc-green-600: 22 163 74;
+    --namc-green-700: 21 128 61;
+    --namc-green-800: 22 101 52;
+    --namc-green-900: 20 83 45;
+
+    --namc-gold-50: 255 251 235;
+    --namc-gold-100: 254 243 199;
+    --namc-gold-200: 253 230 138;
+    --namc-gold-300: 252 211 77;
+    --namc-gold-400: 251 191 36;
+    --namc-gold-500: 245 158 11;
+    --namc-gold-600: 217 119 6;
+    --namc-gold-700: 180 83 9;
+    --namc-gold-800: 146 64 14;
+    --namc-gold-900: 120 53 15;
+
+    --namc-red-50: 254 242 242;
+    --namc-red-100: 254 226 226;
+    --namc-red-200: 254 202 202;
+    --namc-red-300: 252 165 165;
+    --namc-red-400: 248 113 113;
+    --namc-red-500: 239 68 68;
+    --namc-red-600: 220 38 38;
+    --namc-red-700: 185 28 28;
+    --namc-red-800: 153 27 27;
+    --namc-red-900: 127 29 29;
+
+    --namc-purple-50: 250 245 255;
+    --namc-purple-100: 243 232 255;
+    --namc-purple-200: 233 213 255;
+    --namc-purple-300: 216 180 254;
+    --namc-purple-400: 192 132 252;
+    --namc-purple-500: 168 85 247;
+    --namc-purple-600: 147 51 234;
+    --namc-purple-700: 124 58 237;
+    --namc-purple-800: 107 33 168;
+    --namc-purple-900: 88 28 135;
+  }
+
+  .dark {
+    /* Base UI Colors - Dark Mode */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+
+    /* NAMC Brand Colors - Dark Mode (adjusted for better contrast) */
+    --namc-blue-50: 30 58 138;
+    --namc-blue-100: 30 64 175;
+    --namc-blue-200: 29 78 216;
+    --namc-blue-300: 37 99 235;
+    --namc-blue-400: 59 130 246;
+    --namc-blue-500: 96 165 250;
+    --namc-blue-600: 147 197 253;
+    --namc-blue-700: 191 219 254;
+    --namc-blue-800: 219 234 254;
+    --namc-blue-900: 239 246 255;
+
+    --namc-gray-50: 17 24 39;
+    --namc-gray-100: 31 41 55;
+    --namc-gray-200: 55 65 81;
+    --namc-gray-300: 75 85 99;
+    --namc-gray-400: 107 114 128;
+    --namc-gray-500: 156 163 175;
+    --namc-gray-600: 209 213 219;
+    --namc-gray-700: 229 231 235;
+    --namc-gray-800: 243 244 246;
+    --namc-gray-900: 249 250 251;
+
+    /* Green, Gold, Red, Purple stay the same for dark mode readability */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* NAMC Custom Components */
+  .namc-gradient {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  }
+  
+  .namc-gradient-gold {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  }
+  
+  .namc-card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+  
+  .namc-card-hover {
+    @apply namc-card hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .namc-button-primary {
+    @apply bg-namc-blue-600 hover:bg-namc-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200;
+  }
+  
+  .namc-button-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium py-2 px-4 rounded-md transition-colors duration-200;
+  }
+  
+  .namc-button-success {
+    @apply bg-namc-green-600 hover:bg-namc-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200;
+  }
+  
+  .namc-button-warning {
+    @apply bg-namc-gold-600 hover:bg-namc-gold-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200;
+  }
+  
+  .namc-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-namc-blue-500 focus:border-transparent;
+  }
+  
+  .namc-text-gradient {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .namc-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .namc-badge-primary {
+    @apply namc-badge bg-namc-blue-100 text-namc-blue-800;
+  }
+  
+  .namc-badge-success {
+    @apply namc-badge bg-namc-green-100 text-namc-green-800;
+  }
+  
+  .namc-badge-warning {
+    @apply namc-badge bg-namc-gold-100 text-namc-gold-800;
+  }
+  
+  .namc-badge-gray {
+    @apply namc-badge bg-gray-100 text-gray-800;
+  }
+  
+  /* Accessibility improvements */
+  .focus-visible {
+    @apply outline-none ring-2 ring-namc-blue-500 ring-offset-2;
+  }
+  
+  /* Custom scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+} 

@@ -1,0 +1,153 @@
+App Fee Nbr Name Type (B = Business / P = Person)   Personnel Name                  Position Code   Class
+ 20240116269 P                                      PEDRO QUINOY                    OWN             C10,
+ 20240120788 P                                      JONATHAN ZAKARIA MOUGHARBEL     RMG             B,
+ 20240120963 P                                      EMILIO LOPEZ ZARATE             QPT             B,
+ 20240120963 P                                      DORIS LILIANA HERNANDEZ TOMAS   GPT
+ 20240121221 P                                      JOSE FABIAN DOMINGUEZ GOMEZ     RMM             C33,
+ 20240121221 P                                      MIGUEL ANGEL DOMINGUEZ GOMEZ    MAN
+ 20240122128 P                                      OSCAR GOMEZ MEDRANO             RMO             A,C21,
+ 20240122128 P                                      STEVE AARON MEDRANO             CEO
+ 20240122742 P                                      JUAN LUIS CHAVEZ                OWN             C39,
+ 20240122968 P                                      MARK ANSON COLE                 REO             B,
+ 20240123452 P                                      ROBERTO SORIA-AYALA             RMG             C39,
+ 20240123936 P                                      TOROS TONY BALYAN               OWN             C10,
+ 20240123984 P                                      FAHEEM KHAN                     OWN             C10,
+ 20240124095 P                                      OMAR SANCHEZ GOMEZ              RMG             C49,
+ 20240124095 P                                      ISIDRO SANCHEZ GOMEZ            MEM
+ 20240124095 P                                      MARIO RAMIREZ BAEZ              MEM
+ 20240125058 P                                      JOHN THOMAS STULTZ              RMM             D40,
+ 20240125058 P                                      SONYA RENEE WAYLAND             MEM
+ 20240125158 P                                      ROGELIO GALINDO CISNEROS        RMM             C20,
+ 20240125158 P                                      JENNIFER GARCIA CISNEROS        MAN
+ 20240125279 P                                      MOHAMMED GANEM HAMIDEH          OWN             C20,
+ 20240125768 P                                      NEVADA JACK GEO WITZER          REO             C27,
+ 20240126166 P                                      FELIPE MANUEL GAMA              RMO             C39,
+ 20240126166 P                                      MAXIMUS D DOBREV                CEO
+ 20240126203 P                                      MACKENZIE ALLEN JOACHIM         OWN             C36,
+ 20240126407 P                                      JUAN CARLOS BECERRIL RAMIREZ    REO             B,
+ 20240126407 P                                      ALLISON IDALIA GONZALEZ LOPEZ   OFF
+ 20240126607 P                                      FERNANDO AMEZCUA NIETO          OWN             C33,
+ 20240126659 P                                      JUAN COLIN                      OWN             C39,
+ 20240126734 P                                      JUSTIN ANDREW HEINRICH          OWN             B,
+ 20240126924 P                                      MICHAEL S DONNELLY              REO             A,
+ 20240126924 P                                      MAYA DONNELLY                   OFF
+ 20240127044 P                                      CHARLES EDWARD MCCARVER,JR      REO             C10,
+ 20240127044 P                                      DOMINIQUE ALEXIS MCCARVER       OFF
+ 20240127226 P                                      CODY JON CIPRO                  RMO             C20,
+ 20240127226 P                                      CHRISTOPHER JON MANSON          CEO
+20240127364 P   JOSE MACLOVIO RUIZ MICHEL         REO   B-2,
+20240127364 P   MARIA DEL ROSARIO RUIZ GONZALEZ   OFF
+20240127364 P   OLGA LIDIA GONZALEZ LARA          DIR
+20240127372 P   ANTONIO MORALES AGUILAR           REO   B,
+20240127372 P   MARCO ANTONIO MORALES RODRIGUEZ   OFF
+20240127516 P   ERICA ALEXIS                      REO   C10,
+20240127998 P   ALBERT REDONDO VILLANUEVA         RMG   C15,
+20240127998 P   TERRI KAY VILLANUEVA              MAN
+20240128017 P   HONG PHUC DINH                    OWN   C36,
+20240128095 P   FIDEL ARIAS GREGORIO              REO   C54,
+20240128122 P   CHEN QU                           OWN   B,
+20240128123 P   JOSE MARIN RUIZ ALCALA            OWN   C36,
+20240128196 P   KYLE NATHAN OSBORN                REO   C36,
+20240128196 P   GINA FLORENCE OSBORN              OFF
+20240128197 P   LUIS EDUARDO RODRIGUEZ            OWN   B,
+20240128198 P   RICK DANIEL DOERKSEN              OWN   B,
+20240128200 P   GUILLERMO GUADALUPE ROJAS ROJAS   REO   B,
+20240128204 P   KENNY TRAN                        OWN   C10,
+20240128206 P   JARED SCOTT BAKER                 REO   C10,
+20240128207 P   YONGJUN HU                        OWN   C10,
+20240128217 P   JIANQING ZHANG                    OWN   B,
+20240128218 P   BEHZAD ASKARINAM                  RMM   B,
+20240128227 P   DIEGO CAMPOS VILLASENOR           OWN   C50,
+20240128234 P   ADAN ESCAMILLA CALDERON           OWN   C54,
+20240128235 P   HARLAN DALE ICENHOWER             OWN   B,
+20240128236 P   MICHAEL RAY LATTMAN               OWN   C33,
+20240128238 P   MAURICIO FLORES,JR                OWN   B,
+20240128240 P   RUBEN JESSE GAMBOA                REO   C33,
+20240128240 P   MONICA ARACELI GAMBOA             OFF
+20240128242 P   SALVADOR SORIA ARGUETA            OWN   C49,
+20240128243 P   ANJENETTE CRINER                  REO   B,
+20240128243 P   JERRY GORDON PHILLIPS,JR          OFF
+20240128244 P   BINH THANH DANG                   OWN   C20,
+20240128249 P   ANDY CABRAL                       REO   C39,
+20240128251 P   ROBERT BLAIR BROOKS               OWN   C39,
+20240128256 P   DICH DUC DAVID TRUONG,SR          OWN   C10,
+20240128259 P   ALEJANDRO EXEQUIEL VELASCO        OWN   B,
+20240128260 P   JOSE JESUS CASTILLO PEREZ        OWN   D06,
+20240128261 P   JORGE OCEGUEDA MOJARRO           OWN   C-9,
+20240128263 P   JOZABED ESPINDOLA ORDUNA         OWN   C10,
+20240128273 P   AMY GONZALEZ MENDOZA             OWN   C33,
+20240128317 P   NATALIA MARCUS                   REO   D28,
+20240128338 P   CRISTIAN VELASCO                 REO   C-8,
+20240128338 P   JULIO VELASCO                    OFF
+20240128338 P   ALAN VELASCO                     OFF
+20240128340 P   EFRAIN GARCIA BARAJAS            OWN   C27,
+20240128348 P   RICARDO MEDINA GUAJARDO          REO   C-8,
+20240128348 P   ESTEBAN CASTILLEJO               OFF
+20240128348 P   JOSE LUIS CASTILLEJO BARBOSA     OFF
+20240128349 P   SHAWN DONOVIN MCNAMARA           RMO   C15,
+20240128349 P   CINTHIA CATALINA CHAVEZ GUZMAN   CEO
+20240128351 P   JOSE LEONARDO RAZO               OWN   C10,
+20240128352 P   GEORGE GONZALEZ CRUZ             OWN   C33,
+20240128353 P   STEVEN RYAN ANDERSON             OWN   C13,
+20240128354 P   CHANCE KENT LONGWORTH            RMM   C-7,
+20240128355 P   JOSE A JACKSON,JR                OWN   C36,
+20240128357 P   JOSE RODRIGUEZ                   OWN   C20,
+20240128520 P   YARON IVGY                       RMO   B,
+20240128520 P   GILAD BENAROSH                   CEO
+20240128822 P   OR SINA                          RMO   C39,
+20240128822 P   AMIT ABUTBUL                     CEO
+20240129078 P   JEFFREY MICHAEL SACKNIEVICH      OWN   C36,
+20240129079 P   ANTONIO CERVANTES-SOLORIO        OWN   B,
+20240129083 P   JUAN CARLOS GALVAN TORRES        RMM   C20,
+20240129083 P   JORGE CARLOS GALVAN TORRES       MEM
+20240129088 P   ERNESTO PADILLA                  RMM   C27,
+20240129088 P   SERGIO PADILLA                   MEM
+20240129090 P   ROBERT PATRICK KENNEDY           REO   B,
+20240129115 P   BRIAN ROBERT TAYLOR              REO   C-8,
+20240129115 P   SUMMER ANN TAYLOR                OFF
+20240129131 P   IAN STEPANOVICH SUHOVY           REO   D35,
+20240129131 P   HANNAH EVELYN FEY                OFF
+20240129132 P   IDAN ASAYAG                      RMO   B,
+20240129132 P   MATAN ASSAYAG                    CEO
+20240129134 P   JON CHARLES BROWN                RMO   C54,
+20240129134 P   MARC BENJAMIN DEDRICK            MEM
+20240129135 P   JOSEPH YOO                       RMO   C-7,
+20240129137 P   DEREK MICHAEL LUCZYSKI           RMG   B,C33,
+20240129137 P   TERRY ANTHONY ANDREWS            MAN
+20240129142 P   CAMERON TYRONE WALKER            REO   B,
+20240129146 P   JOSE FRANCISCO GUERRERO COCINO   OWN   C-8,
+20240129164 P   AURELIO MERAZ ASTORGA            REO   D24,
+20240129164 P   LESLY V CETINO FLORES            OFF
+20240129201 P   NICK WAYNE PAPAC                 RMO   A,
+20240129201 P   NICHOLAS DUBRAVKO GREGOROVIC     CEO
+20240129203 P   JOSE MANUEL VELA,JR              RMM   B,
+20240129203 P   JULIO ALFREDO ALVAREZ,JR         MAN
+20240129209 P   JUAN GABRIEL BARAJAS             REO   A,C21,
+20240129211 P   JUNYEONG OH                      REO   B,C10,
+20240129216 P   DOUGLAS JAMES GLEED              RMM   C-7,
+20240129470 P   DANNY ALMOG                      RMO   B,D28,
+20240129470 P   DAN ALON                         CEO
+20240129470 P   YITZHAK YEHONATHAN ALON          OFF
+20240204719 P   SERGIO LEWIS DUARTE              RMO   A,
+20240206517 P   OMAR SOLAR HERNANDEZ             OWN   B-2,
+20240207135 P   HEATH ADAM BRADDOCK              REO   C10,C-7,B,
+20240208039 P   GREG RICHARD GAUSE               REO   C33,
+20240208153 P   NICHOLAS MATTHEW MAITOZA         RME   C10,
+20240208189 P   ROBERTO CARLOS FUNEZ             RMO   C39,
+20240208401 P   ROBERT CHARLES BOLINGER          REO   A,
+20240208477 P   SETH WILLIAM DEVEY               RMO   C39,
+20240208540 P   NICHOLAS RAY HIRSCH              REO   C10,
+20240208664 P   MICHAEL LEV SHIZUO LACKNER       REO   C33,
+20240208667 P   JEREMIAH JOEL OLMSTEAD           RMO   C49,
+20240208669 P   AMIT NETZER                      REO   B,
+20240208685 P   DAVID METCALF ROGERS             REO   B,C20,C38,
+20240208686 P   ARASH SOLEIMANY                  RMO   B,
+20240208688 P   JACOB GRAHAM KINTER              REO   B,
+20240208690 P   EVERETT BRADLEY MONTGOMERY       RMO   C39,
+20240208729 P   MICHAEL KELLY ESCAJEDA           RMO   D31,
+20240208731 P   MICHAEL THOMAS MUNOZ             OWN   B,
+20240208736 P   BRYAN STEVEN LOPEZ CUELLAR   REO   D41,
+20240208739 P   PAVLOS LAZOS                 REO   B,
+20240208821 P   DENNIS MIKE ZAKERNICHNYY     REO   C12,
+20240208822 P   DANIEL Y ANTONOV             REO   A,
+

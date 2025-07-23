@@ -1,0 +1,189 @@
+AFN          Typ   ENT   EX/WV CDE   DBA Name                                   License   Mailing address                    City             State   Zip         Date Posted Examinee Name                       Examinee Class   Class
+2024HO09528 H                        JULIAN L SILVA                                     0 4657 VITRINA LN                    PALMDALE         CA            93551     20250711
+2024HO09846 H                        PAUL MONTGOMERY RIGGS                              0 16725 CERRO VISTA                  MORGAN HILL      CA            95037     20250711
+2024HO10264 H                        ANTHONY WILLIAM VELASCO                            0 121 NORTH RAMONA STREET APT #7     RAMONA           CA            92065     20250711
+2024HO10501 H                        JOSE LUIS OROZCO,JR                                0 11301 LIVE OAK WAY                 CORONA           CA            92883     20250711
+ 20240119150 O     CP    E           CARBON FIBER CABINETS INC                          0 28721 APPLETREE                    MISSION VIEJO    CA            92692     20250713 JOHNLERY SAGUIGUIT CRUZ            C-6              C-6,
+ 20240119556 O     CP    W           FACTOR ONE BUILDING SERVICES                       0 410 4TH ST                         W SACRAMENTO     CA            95605     20250711 JOSE RAMON ANGUIANO HERNANDEZ      B                B,
+ 20240122420 O     CP    W           J AND D STEEL FABRICATION AND REPAIR               0 P O BOX 5487                       SANTA MARIA      CA            93456     20250711                                                     C51,C60,
+ 20240122538 O     LC    W           RCR TELECON LLC                                    0 2425 W PARKER ROAD BLD 6C          CARROLLTON       TX            75010     20250711                                                     A,
+ 20240122724 O     JV    W           IOEI-EQM JV                                        0 2840 ADAMS AVENUE SUITE 301        SAN DIEGO        CA            92116     20250711                                                     A,C27,
+ 20240123116 O     CP    W           JOSE DO CONSTRUCTION                               0 3333 LOCKE DRIVE                   SAN JOSE         CA            95111     20250711                                                     B,
+ 20240123312 O     SO    E           GREEN PEAK CONSTRUCTION                            0 473 S MAIN ST                      COALVILLE        UT            84017     20250711 GEORGE FALK                        B                B,
+ 20240123325 O     CP    E           HNH BUILDERS CORPORATION                           0 400 S LEMON ST                     ANAHEIM          CA            92805     20250713 HAILEY NOELLE NOELLE               B                B,
+ 20240123689 O     CP    E           J F ROOFING INC                                    0 19493 CA-18                        APPLE VALLEY     CA            92307     20250713 FRANCISCO MARTINEZ DELGADO         C39              C39,
+ 20240123912 O     SO    E           BRUNER CONSTRUCTION INNOVATIONS                    0 1186 APPLETON ROAD                 SIMI VALLEY      CA            93065     20250711 RONNIE BRUNER                      B                B,
+ 20240124276 O     SO    E           H - G CONCRETE                                     0 1207 E LOUISE AVE                  LATHROP          CA            95330     20250711 HECTOR GONZALES NAVARRO            C-8              C-8,
+ 20240124345 O     SO    E           AUSTIN ELSWORTH BONJOUR                            0 2355 HOMESTEAD ROAD                TEMPLETON        CA            93465     20250711 AUSTIN ELSWORTH BONJOUR            C36              C36,
+ 20240124393 O     CP    E           NJ CONSTRUCTION CLEAN-UP SERVICES                  0 5761 STODDARD ROAD SUITE 301       MODESTO          CA            95356     20250713 ADAN MENDOZA,JR                    D63              D63,
+ 20240124898 O     CP    E           DNA BROS HEATING AND AIR                           0 1401 N CLOVIS AVENUE #115          FRESNO           CA            93727     20250711 DAVID ORTEGA HERNANDEZ             C20              C20,
+ 20240124900 O     CP    W           HP MECHANICAL                                1018538 1544 HEATHER DRIVE                 SANTA ROSA       CA            95401     20250711                                                     C36,C20,
+ 20240125206 O     CP    W           1015 CONSTRUCTION                                  0 1158 PLEASANT HILL STREET          ESCONDIDO        CA            92026     20250711                                                     B,
+ 20240126054 O     CP    W           R&E UTILITIES AND GRADING CONSTRUCTION INC   1136467 P O BOX 1029                       WOODLAND         CA            95776     20250711                                                     A,
+ 20240126333 O     LC    E           MBG MODERN L CONSTTUCTION LLC                      0 10501 COLLETT AVE                  GRANADA HILLS    CA            91344     20250713 MARVIN ISAI ORELLANA MOLINA        B                B,
+ 20240126681 O     CP    W           ARC COATINGS INC                              937908 4195 CHINO HILLS PARKWAY #343      CHINO HILLS      CA            91709     20250711                                                     C33,
+ 20240127011 O     LC    E           ROBINETTE ELECTRIC LLC                             0 21762 BANNER ST                    NUEVO            CA            92567     20250711 JUSTIN DALE ROBINETTE              C10              C10,
+ 20240127074 O     CP    E           MR & MRS YACOUB & DAUGHTERS INC                    0 2032 DRYSDALE ST ADDRESS 2         DANVILLE         CA            94506     20250711 ANTHONY GEORGE MOGANNAM            D42              D42,
+ 20240127092 O     SO    E           DIAMOND CONSTRUCTION                               0 6284 MOUNTAIN MEADOW CT            PARADISE         CA            95969     20250711 TYLER ROBERT DIAMOND               B                B,
+ 20240127185 O     SO    E           811 PLUMBING                                       0 17341 DAUBY CT                     RIVERSIDE        CA            92508     20250711 MANUEL ALEJANDRO SANCHEZ BARAJAS   C36              C36,
+ 20240127379 O     CP    W           VALOR BUILT INC                                    0 3395 N EMPEROR AVENUE              FRESNO           CA            93737     20250711                                                     B,
+ 20240127488 O     CP    E           STONE IMAGE FLOORING AND FLOOR COVERING            0 25560 PRADO DE ORO                 CALABASAS        CA            91302     20250711 BOBBY BABAK AGHAKHANI              C15              C15,
+ 20240128068 O     CP    W           MILAN CONSTRUCTION INC                             0 18121 IRVINE BLVD                  TUSTIN           CA            92780     20250711                                                     B,
+ 20240128071 O     CP    W           DEGREE COOLING AND HEATING INC                     0 3907 LA CRESCENTA AVE #103         LA CRESCENTA     CA            91214     20250711                                                     C20,
+ 20240128303 O     CP    W           TODD LEUNG CONSTRUCTION INC                        0 3444 RHODA AVE                     OAKLAND          CA            94602     20250711                                                     B,
+ 20240128311 O     CP    W           BAKERSFIELD SIGNS                                  0 6906 MC CUTCHEN RD 300             BAKERSFIELD      CA            93313     20250711                                                     C45,
+ 20240128407 O     CP    E           TOUTONGHI DESIGN + BUILD INC                       0 529 CALIFORNIA AVE                 SANTA MONICA     CA            90403     20250711 MARTIN PHILIP TOUTONGHI            B                B,
+ 20240128431 O     CP    W           LIMITLESS LANDSCAPING INC                          0 2034 VERONA CT                     OAKLEY           CA            94561     20250711                                                     C27,
+ 20240128518 O     CP    W           DAVE'S & SONS CONSTRUCTION CO INC                  0 5010 W SPRUCE AVE                  FRESNO           CA            93722     20250711                                                     B,
+ 20240128523 O     CP    W           INDUS GENERAL INC                                  0 1851 HERITAGE LANE SUITE 129       SACRAMENTO       CA            95815     20250711                                                     B,
+ 20240128536 O     CP    E           FULLHOUSE PRO CONSTRUCTION INC                     0 2000 CRYSTAL SPRINGS RD,APT 1835   SAN BRUNO        CA            94066     20250711 SERGEI CHUSHKIN                    B                B,
+ 20240128537 O     LC    E           PILOT DOOR SYSTEMS LLC                             0 406 W INDUSTRIAL RD #2             PLEASANT GROVE   UT            84062     20250711 JACOB ADAM GORRINGE                D28              D28,
+ 20240128540 O     SO    E           J L PLUMBING                                       0 7132 DOGWOOD DR                    SHINGLETOWN      CA            96088     20250711 JADE FADARA LINCOLN                C36              C36,
+ 20240128556 O     CP    E           TCB REMODELING INC                                 0 22453 ISATIS AVENUE                APPLE VALLEY     CA            92307     20250711 TOBY CLAIRE BROWN                  B                B,
+ 20240128724 O     LC    E           MODERN TOUCH CONTRACTOR LLC                        0 3121 PLEITNER AVE APT #5           OAKLAND          CA            94602     20250711 FIDELIO MARTINEZ GUZMAN            B                B,
+ 20240128727 O     LC    E           ALAMDAR PRO PAINTING LLC                           0 2011 WYDA WAY #30                  SACRAMENTO       CA            95825     20250711 ALI MORADI                         C33              C33,
+ 20240128729 O     CP    E           GREENCORE LANDSCAPE INC                            0 3679 BRONSON ST                    SAN BERNARDINO   CA            92407     20250711 RAUL LARA                          C27              C27,
+ 20240128731 O     CP    E           ORDAZ PAINTING CORP                                0 4015 MOUNTAIN DR SPC 1             SAN BERNARDINO   CA            92407     20250711                                                     C33,
+ 20240128732 O     CP    E           CAMACHO'S ROOFING INC                              0 7364 RECHE CANYON RD               COLTON           CA            92324     20250711 ANGEL ARMANDO CAMACHO DELGADO      C39              C39,
+ 20240128774 O     CP    E           R A D TRAFFIC CONTROL INC                          0 512 KERR AVE                       MODESTO          CA            95354     20250711 RICARDO RODRIGUEZ CANO             C31              C31,
+ 20240128775 O     SO    E           J V PAINTING                                       0 P O BOX 402                        LIVINGSTON       CA            95334     20250711 JESUS ELIAS VILLEGAS GALVAN        C33              C33,
+ 20240128777 O     CP    E           DECASTRO PLUMBING INC                              0 52085 AVENIDA HERRERA              LA QUINTA        CA            92253     20250711 ANTHONY LOUIS DECASTRO             C36              C36,
+ 20240128778 O     LC    E           ATLAS PLUMBING SERVICES LLC                        0 P O BOX 7201                       LONG BEACH       CA            90807     20250711 MICHAEL C MENG                     C36              C36,
+ 20240128781 O     CP    E           MDR BUILDERS INC                                   0 13632 KORNBLUM AV #5               HAWTHORNE        CA            90250     20250711 MARCOS DE MIREL ESTRADA CHANG      B                B,
+ 20240128785 O     SO    E           LEO'S TREE SERVICE                                 0 1113 CARSON STREET                 SEASIDE          CA            93955     20250711 LEONARDO ORTIZ AMAYA               C49              C49,
+ 20240128792 O     CP    E           GENERAL SOLUTIONS COATINGS                         0 2754 WEEPING WILLOWS RD            CHULA VISTA      CA            91915     20250711 ANGEL ALEXIS MORALES-TORRES        C33              C33,
+ 20240128795 O     CP    E           MMC BUILDING SERVICES INC                          0 2376 COCHRAN ST                    SIMI VALLEY      CA            93065     20250711 MARICELA ROBLES                    B                B,
+ 20240128801 O     SO    E           ALAN STEVEN BENAVENTE                              0 3332 TONIA AVE                     ALTADENA         CA            91001     20250711 ALAN STEVEN BENAVENTE              B                B,
+ 20240128804 O     CP    E           CAL PRIME SOLUTIONS INC                            0 5754 CALLIE LN APT G               SACRAMENTO       CA            95841     20250711 SAMIR TURKMANI                     B                B,
+ 20240128805 O     CP    E           R & R LOYAL ROOFING INC                            0 3318 TOPAZ LN                      LANCASTER        CA            93535     20250711 RODOLFO RENDON MATA                C39              C39,
+ 20240128818 O     LC    E           INTERGRATED ECOLOGY LLC                            0 P O BOX 56                         DAVENPORT        CA            95017     20250711 ROBERT WILLIAM HENRY,III           C27              C27,
+ 20240128839 O     SO    E           CHZ DRYWALL                                        0 229 ALMONDTREE LN                  OAKLEY           CA            94561     20250711 JORGE LUIS CASTANEDA CHAIREZ       C-9              C-9,
+ 20240128841 O     SO    E           DELTA SYSTEMS HEATING & AIR CONDITIONING           0 3148 EL KU AVENUE                  ESCONDIDO        CA            92025     20250711 TRAVIS LEVAN ANDERSON              C20              C20,
+ 20240128942 O   CP   W   CALI PRO GARAGE DOORS & GATES INC               0 1755 ARGYLE AVE UNIT 1507               HOLLYWOOD          CA   90028   20250711                                      D28,
+ 20240128978 O   CP   W   VENTURA LOCKSMITHS INC                          0 901 E MAIN ST                           VENTURA            CA   93001   20250711                                      C28,
+ 20240129011 O   CP   W   CRUZ FAMILY CONSTRUCTION CORP                   0 1009 W 133RD ST                         COMPTON            CA   90222   20250711                                      B,
+ 20240129023 O   CP   W   HEPHAESTUS DRYWALL INC                          0 21326 ROMAR ST                          CHATSWORTH         CA   91311   20250711                                      C-9,
+ 20240129081 O   CP   W   ALL IN ONE FACILITY SERVICES                    0 P O BOX 63827                           IRVINE             CA   92602   20250711                                      B,
+ 20240129200 O   CP   W   HEATWAVE POOL SOLAR                             0 13950 POWERS ROAD                       POWAY              CA   92064   20250711                                      C53,
+ 20240129251 O   CP   W   JN PREMIER BUILD CO                             0 25108 1/2 NARBONNE AVE                  LOMITA             CA   90717   20250711                                      B,
+ 20240129267 O   CP   W   PURE INNOVATION ELECTRIC                   865403 3964 RIVERMARK PLAZA #312               SANTA CLARA        CA   95054   20250711                                      C10,
+ 20240129366 O   LC   W   GOTPOWER ELECTRIC LLC                           0 1296 FOSTER ST                          BEAUMONT           CA   92223   20250711                                      C10,
+ 20240129601 O   LC   W   REVIVAL CONTRACTORS LLC                    963379 5852 DEERFOOT LN                        YORBA LINDA        CA   92886   20250711                                      B,
+ 20240129617 O   CP   W   VALLEY POWER SOLUTIONS                          0 8201 DORADO CANYON RD                   SOMERSET           CA   95624   20250711                                      C10,
+ 20240205168 S   CP   E   SPECTRUM BUILDERS & RENOVATIONS INC       1105619 4698 DUCKHORN DRIVE                     SACRAMENTO         CA   95834   20250711 TASAWWAR ALI                   C39   C39,
+ 20240205305 S   CP   E   TECA ELECTRIC INC                         1115072 16380 FOOTHILL BLVD APT 13              SAN LEANDRO        CA   94578   20250711 JOSUE SALVADOR ALCANTAR        C-7   C-7,
+ 20240207219 R   PA   W   PRICELESS PAINTING                        1063868 11681 STERLING AVE # G                  RIVERSIDE          CA   92503   20250711                                      C33,
+ 20240207237 R   LC   E   R B TRAVIS                                1084502 4935 SOUTHFRONT ROAD SUITE A            LIVERMORE          CA   94551   20250711 MARC ANTHONY SANTILLANO        C36   C36,
+ 20240207672 R   CP   E   DAAS HEATING & COOLING INC                1060720 875 N 18TH STREET                       SAN JOSE           CA   95112   20250711 DANIEL BALVANEDA CAMPOS        C20   C20,
+ 20240207947 R   CP   E   GOOD AND UPRIGHT CONSTRUCTION INC          992529 8707 N FORBES ROAD                      LINCOLN            CA   95648   20250711 VADZIM RODIONOVICH APANOVICH   B     B,
+ 20240208084 R   CP   E   BFA FLOORING                              1079495 7577 GREENBURN DRIVE                    ROSEVILLE          CA   95678   20250711 IURII OMELCHAK                 C15   C15,
+ 20240208101 R   CP   E   SPENCE FENCE COMPANY ENTERPRISES           987483 1145 N MILLER PARK CT                   VISALIA            CA   93292   20250711 BOBBI JEAN NELSON              C13   C13,
+ 20240208162 R   LC   W   CRI SOCAL                                 1127433 6031 CONNECTION DRIVE                   IRVING             TX   75039   20250711                                      C17,
+ 20240208322 R   CP   W   ASTRO INVESTMENT DEVELOPMENT LTD          1065731 919 S IROLO STREET                      LOS ANGELES        CA   90006   20250711                                      B,
+ 20240208394 R   CP   W   MARATHON CONSTRUCTION CORPORATION          411338 10108 RIVERFORD ROAD                    LAKESIDE           CA   92040   20250711                                      A,
+ 20240208412 R   CP   W   P C W MILLWORKS INC                        990433 2041 S SUSAN ST                         SANTA ANA          CA   92704   20250711                                      C-6,
+ 20240208473 R   SO   W   ESYS THE ENERGY CONTROL COMPANY            662541 4520 STINE ROAD SUITE 7                 BAKERSFIELD        CA   93313   20250711                                      C10,
+ 20240208550 R   CP   W   ENDLISS ENERGY SOLUTIONS INC              1111484 18645 E GALE AVE SUITE 238              CITY OF INDUSTRY   CA   91748   20250711                                      C10,
+ 20240208648 R   CP   W   JM PROGRAM BUILDERS CONSTRUCTION INC      1102184 354 E HOME ST                           RIALTO             CA   92376   20250711                                      B,
+ 20240208676 R   CP   W   US HOME DEVELOPERS INC                     947505 15335 MORRISON ST #375                  SHERMAN OAKS       CA   91403   20250711                                      B,
+ 20240208699 R   CP   W   NB DESIGNS INC                             996793 P O BOX 430                             LIVERMORE          CA   94551   20250711                                      B,
+ 20240208702 S   CP   E   LIBERTY PAINTING AND RESTORATION INC       869784 480 W LAMBERT RD STE D                  BREA               CA   92821   20250711                                      B,
+ 20240208706 S   LC   E   RELIABLE LANDSCAPE AND TREE SERVICE LLC   1136918 1245 OLIVE ST                           SANTA ROSA         CA   95407   20250711 ROMAN VELAZQUEZ                C49   C49,
+ 20240208714 S   CP   E   FASONE CONSTRUCTION INC                    749538 8644 NORWALK BLVD                       WHITTIER           CA   90606   20250711 JOSEPH FRANK FASONE            A     A,
+ 20240208728 R   CP   E   TECH - WALL OF VENTURA INC                 599057 2590 EAST MAIN ST STE 105               VENTURA            CA   93003   20250711 KEVIN JAMES KILDUFF            C-2   C-2,
+ 20240208737 S   CP   E   LANCON DESIGN & DEVELOPMENT               1044801 2470 TAPESTRY CT                        LIVERMORE          CA   94550   20250711                                      C27,
+ 20240208812 S   SO   E   GASPAR GENERAL CONSTRUCTION               1096498 P O BOX 6752                            OXNARD             CA   93031   20250711 FRANCISCO GASPAR HERNANDEZ     C39   C39,
+ 20240208814 S   SO   E   FIRMLINE CONSTRUCTION                     1115030 10412 1/2 S BROADWAY                    LOS ANGELES        CA   90003   20250711 MOISES DANIEL ROSALES          C-7   C-7,
+ 20240208819 S   CP   E   STOKERTECH INC                            1021671 48841 VIA MARINA                        INDIO              CA   92201   20250711 CHRISTOPHER ALAN STOKER        C-7   C-7,
+ 20240208829 S   LC   W   F&T INDUSTRIAL SERVICES LLC               1139461 940 S KIMBALL AVE #175                  SOUTHLAKE          TX   76092   20250711                                      D06,
+ 20240208831 S   CP   E   PURESKYY AIR CONDITIONING & HEATING CO    1123008 72811 HIGHWAY 111 #1054                 PALM DESERT        CA   92260   20250711 NICHOLAS EZEKIEL MATA          C36   C36,
+ 20240208832 S   SO   E   RICK CUSTOM CONSTRUCTION                  1096510 1644 PALOU AVE UNIT C                   SAN FRANCISCO      CA   94124   20250711 RICARDO HERRERA                C36   C36,
+ 20240208837 S   CP   E   ESTRADA MASONRY INC                       1094599 376 N 33RD ST                           SAN JOSE           CA   95133   20250711 MIGUEL ANGEL ESTRADA CAZARES   C-8   C-8,
+ 20240208841 S   CP   W   AMTEK CONSTRUCTION                         490382 946 N LEMON ST                          ORANGE             CA   92867   20250711                                      D56,
+ 20240208842 S   SO   E   FREEDOM EARTHWORKS                        1105929 134 BUENA VISTA DR                      FREEDOM            CA   95019   20250711 DANIEL GOMEZ                   A     A,
+ 20240208850 S   CP   E   JURAT CONSTRUCTION GROUP                  1126361 2962 QUINTER WAY                        SACRAMENTO         CA   95835   20250711 FAHIM JURAT                    A     A,
+ 20240208852 S   SO   E   TIMOTHY LAZARO                            1138714 8506 FONTANA ST                         DOWNEY             CA   90241   20250711 TIMOTHY ORION LAZARO           C46   C46,
+ 20240208860 S   CP   W   TAG CONSTRUCTION SERVICES INC              557970 7328 MISSION GORGE RD                   SAN DIEGO          CA   92120   20250711                                      C39,
+ 20240208862 S   CP   E   HENLEY'S PLUMBING & AIR                    776658 1701 COMMERCE ST                        CORONA             CA   92878   20250711 BRYAN HENLEY                   B     B,
+ 20240208875 S   CP   W   NEW SUNRISE PLASTERING INC                1088858 10130 RUSH STREET                       SOUTH EL MONTE     CA   91733   20250711                                      D39,
+ 20240208876 S   PA   W   ARG CONSTRUCTION                           967155 11 GORDON CT                            EL SOBRANTE        CA   94803   20250711                                      C39,
+2025HO00001 H             CAESAR MODESTO CASTRO                           0 1811 18TH AVE                           KINGSBURG          CA   93631   20250711
+2025HO00002 H             MICHAEL EUGENE JONES                            0 2715 W KETTLEMAN LN STE 203,P O BOX 232 LODI               CA   95242   20250711
+2025HO00003 H             ALEXIS NATIVIDAD MOYA                           0 10004 EAST AVE S-14                     LITTLEROCK         CA   93543   20250711
+2025HO00004 H             SUZANNE ROBIN NARANJO                           0 2599 VALLEJO ST                         SANTA ROSA         CA   95405   20250711
+2025HO00005 H             MARC WILLIAMSON                                 0 745 LAMPLIGHTER ROAD                    SAN MARCOS         CA   92069   20250711
+2025HO00006 H             JESSE JACINTO SANCHEZ                           0 83612 COXCOMB DRIVE                     COACHELLA          CA   92236   20250711
+2025HO00011 H             PAYTON WAYNE HOFF                               0 487 WRENTHHAM DR                        VACAVILLE          CA   95688   20250711
+2025HO00013 H             CHRISTINA SUZANNE SMITH                         0 32645 RACHEL CIRCLE                     DANA POINT         CA   92629   20250711
+2025HO00017 H             THOMAS CALVIN KENNARD                           0 160 NORTH 400 EAST                      PROVO              UT   84606   20250711
+2025HO00018 H             RUBEN LEOS,JR                                   0 425 8TH ST                              SANTA ROSA         CA   95401   20250711
+2025HO00021 H             ABRAHAM CABRERA SERVIN                          0 401 E CHAPEL ST                         SANTA MARIA        CA   93454   20250711
+2025HO00024 H             JARED WILLIAM DUBINSKY                          0 90 SCENIC AVE                           SAN RAFAEL         CA   94901   20250711
+2025HO00026 H             TAVISH CODY LOUNSBURY                           0 462 E PINE VIEW DR                      CENTRAL            UT   84722   20250711
+2025HO00027 H   ATAKALTY HAILU GEBRU                   0 4259 JUNIPER ST #40              SAN DIEGO        CA       92105   20250711
+2025HO00046 H   ISAIAS JULIAN BARRERA                  0 360 FIRCREST DRIVE               UKIAH            CA       95482   20250711
+2025HO00047 H   FRANCISCO EMILIO HERRERA SIERRA        0 6800 VARIEL AVE APT 306          CANOGA PARK      CA       91303   20250711
+2025HO00048 H   DIANA EVANGELINE FEIL-SHARMA           0 2395 CENTER ROAD                 NOVATO           CA       94947   20250711
+2025HO00049 H   DARRYL BOUVIER KEYES                   0 1801 BEDLANE LANE #E             NEWPORT BEACH    CA       92660   20250711
+2025HO00052 H   JOHNNY REYNALDO BALDERAS               0 505 DOVECOTES COURT              BAKERSFIELD      CA       93312   20250711
+2025HO00053 H   JOHANNA PATRICIA ALLEN                 0 1850 SOUTH PRIDE STREET          VISALIA          CA       93277   20250711
+2025HO00054 H   JENNY LYNN TIPTON                      0 6690 ROCKY CANYON RD             ATASCADERO       CA       93422   20250711
+2025HO00055 H   KARLEE MIKAL DRAPER                    0 5809 S 4050 W                    ROY              UT       84067   20250711
+2025HO00056 H   KAREN MARIA SANTOS                     0 1055 WISE RD                     LINCOLN          CA       95648   20250711
+2025HO00057 H   JUANA BAUTISTA CORTEZ                  0 1802 MEADOW AVE                  DELANO           CA   932154742   20250711
+2025HO00059 H   JOSE MIGUEL GARCIA                     0 409 VANCLUSE BAY DR              BAKERSFIELD      CA       93307   20250711
+2025HO00060 H   JONATHAN RYAN MCLEMORE                 0 5422 TOUCANET CT                 OCEANSIDE        CA       92057   20250711
+2025HO00061 H   LOGAN FLOYD GARRETT                    0 3484 E 13 MILE RD                PARIS            MI       49338   20250711
+2025HO00062 H   LAIDISHA FERREIRA SANTOS               0 11928 BAYLESS ST                 MORENO VALLEY    CA       92557   20250711
+2025HO00065 H   KERRY KYLE KINKADE                 71500 7075 DESERT QUAIL DR             TWENTYNINE PALMS CA       92277   20250711
+2025HO00066 H   KENNETH RUSSELL MACARAEG               0 27289 ALLWOOD WAY                MENIFEE          CA       92584   20250711
+2025HO00067 H   NICHOLAS PATRICK SWEENEY               0 21933 WESTMERE LN                FRIANT           CA   936269742   20250711
+2025HO00068 H   NESTOR EDUARDO RAMIREZ CUADO           0 1298 QUEENS ROAD                 BERKELEY         CA       94708   20250711
+2025HO00069 H   NATHAN JOAQUIN HERNANDEZ               0 1435 KEYSTONE DR                 SAN BERNARDINO   CA       92407   20250711
+2025HO00070 H   MIGUEL ANGEL CHAVEZ                    0 124 LEIGHTON DR                  VENTURA          CA       93001   20250711
+2025HO00071 H   MICAH TAYLOR RODRIGUEZ                 0 574 E 400 S                      IVINS            UT       84738   20250711
+2025HO00072 H   MESHACH NAHALTIN NELSON                0 PO BOX 4215                      SHIPROCK         NM       87420   20250711
+2025HO00073 H   NORBERTO DANIEL GUERRERO               0 7420 PAISLEY AVE                 HESPERIA         CA       92345   20250711
+2025HO00074 H   NICOLE ANN GOULD                       0 889 WEST SUMMERLAND AVE APT #2   SAN PEDRO        CA       90731   20250711
+2025HO00075 H   OLIVER RODRIGUEZ                       0 403 MILHAM AVENUE                KETTLEMAN CITY   CA       93239   20250711
+2025HO00076 H   ROBERT EDWARD GARDENER,III             0 19440 EAST ST                    LATON            CA       93242   20250711
+2025HO00077 H   ROGER ERWIN LAWRENCE                   0 354 E PLAZE DR #301              SANTA MARIA      CA       93454   20250711
+2025HO00078 H   RYAN HOSHI MILLHOUSE                   0 36 PARTRIDGE LN                  ALISO VIEJO      CA       92656   20250711
+2025HO00079 H   SAMUEL TONY PHAM                       0 1000 RIPLEY ST APT 2             SANTA ROSA       CA       95401   20250711
+2025HO00082 H   SENITULI KINIKINI TUITA                0 10513 S SAGE VISTA WAY           SOUTH JORDAN     UT       84009   20250711
+2025HO00090 H   WILLIAM DAMIAN BARAJAS                 0 160 E COOLIDGE AVE               MODESTO          CA       95350   20250711
+2025HO00091 H   WILLIAM BRADLEY WARD                   0 426 PRAIRIE KNOLL DR             POPLAR GROVE     IL       61065   20250711
+2025HO00092 H   VICTOR HUGO FIGUEROA                   0 25027 SANORIA ST                 LAGUNA NIGUEL    CA       92677   20250711
+2025HO00094 H   ULISES CANSECO                         0 975 CHERRY AVE APT 11            BEAUMONT         CA       92223   20250711
+2025HO00095 H   CO NGOC NGUYEN                         0 1952 COOPER DRIVE                SANTA ROSA       CA       95404   20250711
+2025HO00097 H   AAMIR JAVEED ZANDARI                   0 5160 DOMENGINE WAY               ANTIOCH          CA       94531   20250711
+2025HO00098 H   ABELARDO RAMIREZ                       0 1802 DAVID SANCHEZ STREET        SANTA MARIA      CA       93454   20250711
+2025HO00100 H   ALEXANDRA MEDINA                       0 41404 AVE 14                     MADERA           CA       93636   20250711
+2025HO00101 H   AMARI CHRISTOPHER JOYNER               0 3897 HARVEST CIRCLE              OAKLEY           CA       94561   20250711
+2025HO00105 H   BRYANT ANTHONY ULLOA                   0 5537 MYRTLE AVE                  LONG BEACH       CA       90805   20250711
+2025HO00109 H   ANTHONY VICENTE BUSTAMANTE             0 6386 E BRALY                     FRESNO           CA       93727   20250711
+2025HO00113 H   GUNES DAMLA GULMEZ                     0 514 W YOSEMITE AVE               MADERA           CA       93637   20250711
+2025HO00114 H   THOMAS GRIFFEN RICE                    0 3204 PLANTATION ROAD             AUSTIN           TX       78745   20250711
+2025HO00117 H   ERNESTO ORTIZ SOTELO                   0 4071 N CECELIA AVE               FRESNO           CA       93722   20250711
+2025HO00120 H   DESIREE LIZETH JIMENEZ                 0 3042 BEECH DRIVE                 ATWATER          CA       95301   20250711
+2025HO00121 H   DANTE LUIS JULIO GONZALES              0 304 LA LAJA DR                   ANGLETON         TX       77515   20250711
+2025HO00151 H   HECTOR VALENTIN FERNANDEZ              0 26906 FRISCO WAY                 MADERA           CA       93638   20250711
+2025HO00152 H   ETHAN BOWMAN SAMMONS                   0 1909 BANK ST.                    BAKERSFIELD      CA       93304   20250711
+2025HO00156 H   WILLIAM LEE GADOW                      0 4551 PUERTA DEL SOL RD           CAMINO           CA       95709   20250711
+2025HO00163 H   JOSHUA JOSE CANADA                     0 15511 3RD ST                     VICTORVILLE      CA       92345   20250711
+2025HO00165 H   XAVIER EDUARDO MALDONADO          163099 20172 LAKE CANYON DR             WALNUT           CA       91789   20250711
+2025HO00177 H   ANTHONY MOISES MARTINEZ                0 32258 POINSETTIA CT              WINCHESTER       CA       92596   20250711
+2025HO00186 H   ANTONIO JAMES DE VARD                  0 933 FULTON AVE APT 435           SACRAMENTO       CA       95825   20250711
+2025HO00191 H   FRANCISCO JAVIER VALDIVIA              0 2297 RINGWOOD AVE                SAN JOSE         CA       95131   20250711
+2025HO00216 H   BARRY JAMES GIBERT                     0 4955 E HUNTER AVE                ANAHEIM          CA       92807   20250711
+2025HO00224 H   EZEQUIEL ANGEL JR TAPIA                0 1793 S HAMILTON BLVD             POMONA           CA       91766   20250711
+2025HO00228 H   CONOR ANTHONY MANKA                    0 1027 WARNER ST                   CHICO            CA       95926   20250711
+2025HO00229 H   NICHOLAS JOSEPH FRYOU                  0 218 JACKSON STREET               SANTA CRUZ       CA       95060   20250711
+2025HO00240 H   JOSE N ZAVALA,JR                       0 20902 CABOT BLVD                 HAYWARD          CA       94545   20250711
+2025HO00241 H   PATRICIA BRIANO DEROUEN                0 20902 CABOT BLVD                 HAYWARD          CA       94545   20250711
+2025HO00242 H             BRYAN ROBERT CAMPBELL                        0 20902 CABOT BLVD              HAYWARD        CA   94545   20250711
+ 20250200079 R   CP   W   CARBON SUPPLY INC                      1051220 6607 SCOUT AVE                BELL GARDENS   CA   90201   20250711                       A,B,C10,C36,
+ 20250200090 R   CP   W   FD HOUSE REMODEL INC                   1118101 500 E CALAVERAS BLVD 246      MILPITAS       CA   95035   20250711                       B,
+ 20250200100 R   LC   E   LAX INTEGRATED EXPRESS SOLUTIONS LLC   1039798 5901 W CENTURY BLVD STE 200   LOS ANGELES    CA   90045   20250711 ALIREZA HASHEMI   A   A,
+ 20250200107 R   CP   W   SITELOGIQ INC                          1054171 1151 N DEL RIO PLACE          ONTARIO        CA   91764   20250711                       A,
+

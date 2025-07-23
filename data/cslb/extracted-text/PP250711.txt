@@ -1,0 +1,152 @@
+App Fee Nbr  Name Type (B = Business / P = Person)   Personnel Name                                      Position Code   Class
+ 20240119150 P                                       JOHNLERY SAGUIGUIT CRUZ                             REO             C-6,
+ 20240119150 P                                       AMANDA C CRUZ                                       OFF
+ 20240119556 P                                       JOSE RAMON ANGUIANO HERNANDEZ                       REO             B,
+ 20240119556 P                                       MARIA DEL ROCIO GUERRERO PARRA                      OFF
+ 20240122420 P                                       STEVEN PAUL DOUGLAS COX                             RME             C51,C60,
+ 20240122420 P                                       JOSE ANTONIO TREVINO,JR                             CEO
+ 20240122420 P                                       DAVID GARLAND COX                                   OFF
+ 20240122538 P                                       JOSHUA DAVID DAME                                   RMM             A,
+ 20240122538 P                                       BRIAN PAUL                                          MAN
+ 20240122724 B                                       I O ENVIRONMENTAL AND INFRASTRUCTURE INCORPORATED   ENT             A,C27,
+ 20240122724 B                                       ENVIRONMENTAL QUALITY MANAGEMENT INC                ENT
+ 20240123116 P                                       JOSEPH THINH DO                                     REO             B,
+ 20240123312 P                                       GEORGE FALK                                         OWN             B,
+ 20240123325 P                                       HAILEY NOELLE NOELLE                                REO             B,
+ 20240123689 P                                       FRANCISCO MARTINEZ DELGADO                          REO             C39,
+ 20240123689 P                                       LIZETTE ASHAID DIAZ PONCE                           OFF
+ 20240123912 P                                       RONNIE BRUNER                                       OWN             B,
+ 20240124276 P                                       HECTOR GONZALES NAVARRO                             OWN             C-8,
+ 20240124345 P                                       AUSTIN ELSWORTH BONJOUR                             OWN             C36,
+ 20240124393 P                                       ADAN MENDOZA,JR                                     RMO             D63,
+ 20240124393 P                                       ADAN MENDOZA                                        CEO
+ 20240124393 P                                       DAHLIA GARCIA MENDOZA                               OFF
+ 20240124898 P                                       DAVID ORTEGA HERNANDEZ                              RMO             C20,
+ 20240124898 P                                       HECTOR ALONSO BARRAZA                               OFF
+ 20240124898 P                                       BARRAZA ANMZI LOPEZ                                 OFF
+ 20240124900 P                                       RODOLFO HERRERA                                     REO             C36,C20,
+ 20240125206 P                                       ARTHUR CHARLES MANSIR                               RMO             B,
+ 20240125206 P                                       JONATHAN ARTHUR MANSIR                              CEO
+ 20240125206 P                                       DAVID ARTHUR MANSIR                                 OFF
+ 20240126054 P                                       RAUL MELENDEZ                                       RMO             A,
+ 20240126054 P                                       EVELIN MELENDEZ                                     DIR
+ 20240126054 P                                       ISAUL MELENDEZ                                      DIR
+ 20240126333 P                                       GABRIELA MARISOL ORELLANA                           OFF
+ 20240126333 P                                       MARVIN ISAI ORELLANA MOLINA                         REO             B,
+ 20240126681 P                                       BRIAN JOSEPH BURK                                   REO             C33,
+ 20240127011 P                                       JUSTIN DALE ROBINETTE                               RMM             C10,
+ 20240127074 P                                       ANTHONY GEORGE MOGANNAM                             RME             D42,
+ 20240127074 P                                       IQBAL YACOUB                                        CEO
+20240127074 P   YOUSEF YACOUB                      OFF
+20240127092 P   TYLER ROBERT DIAMOND               OWN   B,
+20240127185 P   MANUEL ALEJANDRO SANCHEZ BARAJAS   OWN   C36,
+20240127379 P   LEVI RICHARD BROWATZKE             REO   B,
+20240127379 P   MIKAELA FAITH BROWATZKE            OFF
+20240127379 P   DARRIN GORDON KIRK                 OFF
+20240127379 P   SHARON SUZANNE BROWATZKE           DIR
+20240127488 P   BOBBY BABAK AGHAKHANI              RME   C15,
+20240127488 P   ALI AKBAR AGHAKHANI                OFF
+20240128068 P   KHALIL ABDALLAH MILAN              REO   B,
+20240128068 P   DOMINIC ANDRE MILAN                OFF
+20240128071 P   HRATCH HAGOPIAN                    REO   C20,
+20240128071 P   ANNIE JANANIAN                     OFF
+20240128303 P   TODD LEUNG                         REO   B,
+20240128311 P   RUBEN CALDERON                     RME   C45,
+20240128311 P   REHANA MOIZ BHAIJI                 CEO
+20240128311 P   SARAH MOIZ BHAIJI                  OFF
+20240128407 P   MARTIN PHILIP TOUTONGHI            REO   B,
+20240128431 P   MARTIN JONATHAN RAMOS              REO   C27,
+20240128431 P   VERONICA HERNANDEZ RAMOS           OFF
+20240128431 P   JAVIER ARCEO RAMOS                 OFF
+20240128518 P   DAVID ARAMOVICH MURADYAN           REO   B,
+20240128523 P   NAZIA JABEEN IQBAL                 REO   B,
+20240128523 P   MUHAMMAD YOUNAS MALIK              OFF
+20240128536 P   SERGEI CHUSHKIN                    REO   B,
+20240128537 P   JACOB ADAM GORRINGE                RMG   D28,
+20240128540 P   JADE FADARA LINCOLN                OWN   C36,
+20240128556 P   TOBY CLAIRE BROWN                  REO   B,
+20240128556 P   HEATHER MARIE BROWN                OFF
+20240128724 P   FIDELIO MARTINEZ GUZMAN            RMG   B,
+20240128727 P   ALI MORADI                         RMG   C33,
+20240128729 P   RAUL LARA                          REO   C27,
+20240128731 P   ERNESTO ORDAZ SANDOVAL             REO   C33,
+20240128732 P   ANGEL ARMANDO CAMACHO DELGADO      REO   C39,
+20240128732 P   CARLOS GUILLERMO CAMACHO SANCHEZ   OFF
+20240128732 P   ALVIN ALEXIS CAMACHO               OFF
+20240128774 P   RICARDO RODRIGUEZ CANO             REO   C31,
+20240128775 P   JESUS ELIAS VILLEGAS GALVAN        OWN   C33,
+20240128777 P   ANTHONY LOUIS DECASTRO             REO   C36,
+20240128778 P   MICHAEL C MENG                  RMM   C36,
+20240128781 P   MARCOS DE MIREL ESTRADA CHANG   REO   B,
+20240128785 P   LEONARDO ORTIZ AMAYA            OWN   C49,
+20240128792 P   ANGEL ALEXIS MORALES-TORRES     REO   C33,
+20240128795 P   MARICELA ROBLES                 REO   B,
+20240128801 P   ALAN STEVEN BENAVENTE           OWN   B,
+20240128804 P   SAMIR TURKMANI                  REO   B,
+20240128805 P   RODOLFO RENDON MATA             REO   C39,
+20240128818 P   ROBERT WILLIAM HENRY,III        RMM   C27,
+20240128839 P   JORGE LUIS CASTANEDA CHAIREZ    OWN   C-9,
+20240128841 P   TRAVIS LEVAN ANDERSON           OWN   C20,
+20240128942 P   JEREMY ASHER WIZMAN             RMO   D28,
+20240128942 P   OFIR SHLOMO AVRAMOV             CEO
+20240128978 P   LUIS DANIEL MELENDEZ            RMO   C28,
+20240128978 P   DANIEL MELENDEZ                 CEO
+20240128978 P   ARIANA MELENDEZ                 OFF
+20240129011 P   YURICES ADEMIR CRUZ             REO   B,
+20240129023 P   FRANCISCO GARCIA                RMO   C-9,
+20240129023 P   IGNACIO GARFIAS                 CEO
+20240129081 P   ANDRES ABEL SIMON ESTRADA       RMO   B,
+20240129081 P   BLANCA EVELYN MIRAMONTES        CEO
+20240129081 P   RAMON G MIRAMONTES              OFF
+20240129200 P   HUGO FRANCISCO PEREZ            RMO   C53,
+20240129200 P   KEVIN MICHAEL BOWMAN            CEO
+20240129251 P   NOEL ANTONIO GONZALEZ           REO   B,
+20240129267 P   JEAN PAUL FISHER                REO   C10,
+20240129366 P   MICHAEL MARK WAITE              RMM   C10,
+20240129366 P   YULIANA WAITE                   MEM
+20240129601 P   DAVID LOSONCZI                  RMM   B,
+20240129601 P   AGI LOSONCZI                    MEM
+20240129617 P   BRIAN BRUCE MARTIN              RMO   C10,
+20240129617 P   REBECCA PAIGE MARTIN            OFF
+20240205168 P   TASAWWAR ALI                    REO   C39,
+20240205305 P   JOSUE SALVADOR ALCANTAR         RMO   C-7,
+20240207219 P   ALISIA ALVARO                   QPT   C33,
+20240207237 P   MARC ANTHONY SANTILLANO         RME   C36,
+20240207672 P   DANIEL BALVANEDA CAMPOS         RMO   C20,
+20240207947 P   VADZIM RODIONOVICH APANOVICH    RME   B,
+20240208084 P   IURII OMELCHAK                  RMO   C15,
+20240208101 P   BOBBI JEAN NELSON              REO   C13,
+20240208162 P   ROBERT CLIFFTON EARLS          RME   C17,
+20240208322 P   KYUNG LAE KIM                  REO   B,
+20240208394 P   MICHAEL VINCENT BADAMO-FURBY   REO   A,
+20240208412 P   THOMAS JOHN GROSCUP            REO   C-6,
+20240208473 P   FABIO MARIO RUSSONIELLO        OWN   C10,
+20240208550 P   LI MA                          RMO   C10,
+20240208648 P   DENNIS RICARDO MATUTE LOPEZ    RMO   B,
+20240208676 P   AVIAD GOVERMAN                 REO   B,
+20240208699 P   NICHOLAS LEE BARBERA           REO   B,
+20240208702 P   LUIS ARMANDO RAMOS             REO   B,
+20240208706 P   ROMAN VELAZQUEZ                RMM   C49,
+20240208714 P   JOSEPH FRANK FASONE            RMO   A,
+20240208728 P   KEVIN JAMES KILDUFF            REO   C-2,
+20240208737 P   ZALAN MIHALY LORINCZ           RMO   C27,
+20240208812 P   FRANCISCO GASPAR HERNANDEZ     OWN   C39,
+20240208814 P   MOISES DANIEL ROSALES          OWN   C-7,
+20240208819 P   CHRISTOPHER ALAN STOKER        REO   C-7,
+20240208829 P   TYSON ALBERT HICKEY            RMM   D06,
+20240208831 P   NICHOLAS EZEKIEL MATA          REO   C36,
+20240208832 P   RICARDO HERRERA                OWN   C36,
+20240208837 P   MIGUEL ANGEL ESTRADA CAZARES   REO   C-8,
+20240208841 P   ALAN MICHAEL SAYCE             REO   D56,
+20240208842 P   DANIEL GOMEZ                   OWN   A,
+20240208850 P   FAHIM JURAT                    REO   A,
+20240208852 P   TIMOTHY ORION LAZARO           OWN   C46,
+20240208860 P   KARL GREGORY GODENSCHWAGER     REO   C39,
+20240208862 P   BRYAN HENLEY                   REO   B,
+20240208875 P   JESUS GUTIERREZ                REO   D39,
+20240208876 P   ISMAEL ARGUETA UMANZOR         QPT   C39,
+20250200079 P   DARREN SAMUEL AZARIAN          RME   A,B,C10,C36,
+20250200090 P   LIQING XU                      RMO   B,
+20250200100 P   ALIREZA HASHEMI                RMO   A,
+20250200107 P   PAULA JEAN SHAFFER             RME   A,
+
