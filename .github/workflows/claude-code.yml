@@ -16,6 +16,7 @@ permissions:
   issues: write
   actions: read
   checks: write
+  id-token: write
 
 jobs:
   claude-code:
@@ -36,7 +37,5 @@ jobs:
       - name: Claude Code
         uses: anthropics/claude-code-action@v0.0.43
         with:
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
