@@ -4,6 +4,7 @@ import React, { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { Toaster } from '@/components/ui/toaster'
+import { NotificationSystem } from '@/components/ui/notification-system'
 
 interface ProvidersProps {
   children: React.ReactNode
@@ -35,6 +36,7 @@ export function Providers({ children }: ProvidersProps) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         {children}
+        <NotificationSystem />
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>

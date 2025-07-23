@@ -294,7 +294,6 @@ export class AuthService {
           details,
           ipAddress,
           userAgent,
-          timestamp: new Date(),
         },
       })
     } catch (error) {

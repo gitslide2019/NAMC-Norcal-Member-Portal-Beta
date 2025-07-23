@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -167,9 +167,9 @@ model User {
   website               String?
   linkedin              String?
   twitter               String?
-  skills                String[]  @default([])
-  certifications        Json?     // Array of certification objects
-  languages             String[]  @default(["English"])
+  skills                String    @default("[]")
+  certifications        String?   // Array of certification objects
+  languages             String    @default("[\"English\"]")
   
   // Security fields
   failedLoginAttempts   Int       @default(0)
@@ -202,10 +202,10 @@ model User {
   // One-to-many relations
   createdUsers          User[]    @relation("UserCreatedBy")
   updatedUsers          User[]    @relation("UserUpdatedBy")
-  createdProjects       Project[]
-  updatedProjects       Project[]
-  createdEvents         Event[]
-  updatedEvents         Event[]
+  createdProjects       Project[] @relation("ProjectCreatedBy")
+  updatedProjects       Project[] @relation("ProjectUpdatedBy")
+  createdEvents         Event[]   @relation("EventCreatedBy")
+  updatedEvents         Event[]   @relation("EventUpdatedBy")
   sentMessages          Message[] @relation("MessageSender")
   receivedMessages      Message[] @relation("MessageReceiver")
   sentAnnouncements     Announcement[]
@@ -318,7 +318,7 @@ model Project {
   description           String
   category              ProjectCategory
   subcategory           String?
-  sector                String[]         @default([])
+  sector                Json             @default("[]")
   
   // Financial information
   budgetMin             Decimal?
@@ -339,8 +339,8 @@ model Project {
   estimatedDuration     Int?             // in days
   
   // Requirements and qualifications
-  requirements          String[]         @default([])
-  skillsRequired        String[]         @default([])
+  requirements          Json             @default("[]")
+  skillsRequired        Json             @default("[]")
   certificationsRequired Json?           // Array of certification requirements
   experienceRequired    Int              @default(0) // years
   bondingRequired       Boolean          @default(false)
@@ -360,7 +360,7 @@ model Project {
   organization          String?
   
   // Search and matching optimization
-  keywords              String[]         @default([])
+  keywords              Json             @default("[]")
   
   // Timestamps
   createdAt             DateTime         @default(now())
@@ -370,9 +370,9 @@ model Project {
   deletedAt             DateTime?
   
   // Relations
-  createdBy             User             @relation(fields: [createdById], references: [id])
+  createdBy             User             @relation("ProjectCreatedBy", fields: [createdById], references: [id])
   createdById           String
-  updatedBy             User?            @relation(fields: [updatedById], references: [id])
+  updatedBy             User?            @relation("ProjectUpdatedBy", fields: [updatedById], references: [id])
   updatedById           String?
   
   // One-to-many relations
@@ -463,9 +463,9 @@ model Event {
   deletedAt       DateTime?
   
   // Relations
-  createdBy       User        @relation(fields: [createdById], references: [id])
+  createdBy       User        @relation("EventCreatedBy", fields: [createdById], references: [id])
   createdById     String
-  updatedBy       User?       @relation(fields: [updatedById], references: [id])
+  updatedBy       User?       @relation("EventUpdatedBy", fields: [updatedById], references: [id])
   updatedById     String?
   
   // One-to-many relations
@@ -562,12 +562,12 @@ model Course {
   duration    Int?         // in minutes
   difficulty  String?      // BEGINNER, INTERMEDIATE, ADVANCED
   category    String?
-  tags        String[]     @default([])
+  tags        Json         @default("[]")
   
   // Content
   modules     Json?        // Array of module objects
-  requirements String[]    @default([])
-  objectives  String[]     @default([])
+  requirements Json         @default("[]")
+  objectives  Json         @default("[]")
   
   // Pricing
   price       Decimal      @default(0)
@@ -758,9 +758,9 @@ model CaliforniaContractor {
   bondAmount            String?
   
   // Classifications and specialties
-  classifications       String[]  @default([])
+  classifications       Json      @default("[]")
   primaryClassification String?
-  specialties           String[]  @default([])
+  specialties           Json      @default("[]")
   
   // Business Profile
   businessType          String?   // Corporation, LLC, Partnership, Sole Proprietorship
@@ -772,24 +772,24 @@ model CaliforniaContractor {
   dataQualityScore      Int?      // 0-100 data completeness
   lastEnriched          DateTime?
   enrichmentStatus      String?   // pending, processing, completed, failed, error
-  searchTerms           String[]  @default([])
+  searchTerms           Json      @default("[]")
   notes                 String?
   
   // Outreach Tracking
   outreachStatus        String?   @default("not_contacted") // not_contacted, contacted, replied, interested, not_interested, member
   lastContactDate       DateTime?
   contactAttempts       Int       @default(0)
-  campaignTags          String[]  @default([])
+  campaignTags          Json      @default("[]")
   leadScore             Int?      // 0-100 sales lead scoring
   
   // NAMC Integration
-  namcMemberId          String?   // Link to User table if they become member
+  namcMemberId          String?   @unique // Link to User table if they become member
   isNamcMember          Boolean   @default(false)
   membershipInterest    String?   // high, medium, low, none
   
   // Geographic and market data
   serviceRadius         Int?      // Miles
-  marketAreas           String[]  @default([])
+  marketAreas           Json      @default("[]")
   competitorAnalysis    Json?     // Market intelligence
   
   // Raw data preservation
