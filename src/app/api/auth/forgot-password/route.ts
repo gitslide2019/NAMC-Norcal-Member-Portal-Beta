@@ -44,7 +44,10 @@ export async function POST(request: NextRequest) {
       return createSuccessResponse(
         { message: successMessage },
         successMessage,
-        { requestId }
+        { 
+          timestamp: new Date().toISOString(),
+          requestId 
+        }
       )
     }
 
@@ -112,7 +115,10 @@ export async function POST(request: NextRequest) {
         emailSent: emailResult.success 
       },
       successMessage,
-      { requestId }
+      { 
+        timestamp: new Date().toISOString(),
+        requestId 
+      }
     )
 
   } catch (error) {

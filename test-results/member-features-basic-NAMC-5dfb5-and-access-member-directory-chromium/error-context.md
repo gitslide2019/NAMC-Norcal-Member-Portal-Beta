@@ -1,0 +1,212 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - link "NAMC NorCal":
+    - /url: /
+  - navigation:
+    - link "About":
+      - /url: /about
+    - link "Events":
+      - /url: /events
+    - link "Members":
+      - /url: /members
+    - button "Programs":
+      - text: Programs
+      - img
+    - link "Resources":
+      - /url: /resources
+  - link "Maria":
+    - /url: /dashboard
+    - img
+    - text: Maria
+  - button "Sign Out":
+    - img
+    - text: Sign Out
+- main:
+  - link "NAMC NorCal":
+    - /url: /
+  - navigation:
+    - link "Dashboard":
+      - /url: /dashboard
+      - img
+      - text: Dashboard
+    - link "Profile":
+      - /url: /profile
+      - img
+      - text: Profile
+    - link "Projects":
+      - /url: /projects
+      - img
+      - text: Projects
+    - link "Events":
+      - /url: /events
+      - img
+      - text: Events
+    - link "Messages 3":
+      - /url: /messages
+      - img
+      - text: Messages 3
+    - link "Directory":
+      - /url: /directory
+      - img
+      - text: Directory
+    - link "Learning":
+      - /url: /courses
+      - img
+      - text: Learning
+    - link "Settings":
+      - /url: /settings
+      - img
+      - text: Settings
+  - text: MJ
+  - paragraph: Maria Johnson
+  - paragraph: Member
+  - img
+  - textbox "Search projects, events, members..."
+  - button:
+    - img
+  - button "MJ Maria":
+    - text: MJ Maria
+    - img
+  - main:
+    - heading "Member Directory" [level=1]
+    - paragraph: Connect with 4 certified minority contractors
+    - img
+    - text: 4 members
+    - heading "Search & Filter" [level=3]:
+      - img
+      - text: Search & Filter
+    - paragraph: Find contractors by name, company, location, or specialty
+    - textbox "Search members..."
+    - combobox: All Types
+    - combobox: All Locations
+    - combobox: All Specialties
+    - text: MR
+    - heading "Maria Rodriguez" [level=3]
+    - text: Premium
+    - paragraph: Rodriguez Construction LLC
+    - paragraph: CEO & Founder
+    - img
+    - text: San Francisco, CA
+    - img
+    - text: maria@rodriguezcons.com
+    - img
+    - text: (415) 555-0123
+    - paragraph: Specializing in sustainable construction and green building practices.
+    - heading "Specialties" [level=4]
+    - text: General Contracting Green Building +1 more
+    - heading "Certifications" [level=4]
+    - text: LEED Certified TECH Clean California
+    - button "View Profile"
+    - button "Message":
+      - img
+      - text: Message
+    - text: JC
+    - heading "James Chen" [level=3]
+    - text: Regular
+    - paragraph: Chen HVAC Services
+    - paragraph: Lead Technician
+    - img
+    - text: Oakland, CA
+    - img
+    - text: james@chenhvac.com
+    - img
+    - text: (510) 555-0456
+    - paragraph: Expert in energy-efficient HVAC systems and heat pump installations.
+    - heading "Specialties" [level=4]
+    - text: HVAC Installation Heat Pumps +1 more
+    - heading "Certifications" [level=4]
+    - text: TECH Clean California EPA Certified
+    - button "View Profile"
+    - button "Message":
+      - img
+      - text: Message
+    - text: SW
+    - heading "Sarah Williams" [level=3]
+    - text: Corporate
+    - paragraph: Williams Electrical Co.
+    - paragraph: Master Electrician
+    - img
+    - text: San Jose, CA
+    - img
+    - text: sarah@williamselectric.com
+    - img
+    - text: (408) 555-0789
+    - paragraph: Licensed electrician with expertise in solar installations and smart home systems.
+    - heading "Specialties" [level=4]
+    - text: Electrical Systems Solar Installation +1 more
+    - heading "Certifications" [level=4]
+    - text: Licensed Electrician Solar Certified
+    - button "View Profile"
+    - button "Message":
+      - img
+      - text: Message
+    - text: MT
+    - heading "Michael Thompson" [level=3]
+    - text: Regular
+    - paragraph: Thompson Plumbing
+    - paragraph: Owner
+    - img
+    - text: Fremont, CA
+    - img
+    - text: mike@thompsonplumbing.com
+    - img
+    - text: (510) 555-1234
+    - paragraph: Reliable plumbing services with 24/7 emergency support.
+    - heading "Specialties" [level=4]
+    - text: Plumbing Water Systems +1 more
+    - heading "Certifications" [level=4]
+    - text: Licensed Plumber Backflow Certified
+    - button "View Profile"
+    - button "Message":
+      - img
+      - text: Message
+- contentinfo:
+  - heading "NAMC NorCal" [level=3]
+  - paragraph: Empowering minority contractors in Northern California through networking, training, and business opportunities.
+  - heading "Platform" [level=4]
+  - list:
+    - listitem:
+      - link "About":
+        - /url: /about
+    - listitem:
+      - link "Events":
+        - /url: /events
+    - listitem:
+      - link "Members":
+        - /url: /members
+    - listitem:
+      - link "Resources":
+        - /url: /resources
+  - heading "Support" [level=4]
+  - list:
+    - listitem:
+      - link "Help Center":
+        - /url: /help
+    - listitem:
+      - link "Contact":
+        - /url: /contact
+    - listitem:
+      - link "Privacy":
+        - /url: /privacy
+    - listitem:
+      - link "Terms":
+        - /url: /terms
+  - heading "Connect" [level=4]
+  - list:
+    - listitem:
+      - link "LinkedIn":
+        - /url: "#"
+    - listitem:
+      - link "Twitter":
+        - /url: "#"
+    - listitem:
+      - link "Facebook":
+        - /url: "#"
+    - listitem:
+      - link "Instagram":
+        - /url: "#"
+  - paragraph: © 2024 NAMC Northern California. All rights reserved.
+- alert
+```

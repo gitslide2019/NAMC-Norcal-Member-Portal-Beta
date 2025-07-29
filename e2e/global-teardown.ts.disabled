@@ -1,0 +1,130 @@
+/**
+ * Playwright Global Teardown
+ * 
+ * Global teardown script that runs after all E2E tests:
+ * - Database cleanup
+ * - Authentication state cleanup
+ * - Temporary file cleanup
+ * - Test artifact organization
+ */
+
+import { FullConfig } from '@playwright/test'
+import { testData } from './fixtures/test-data'
+import fs from 'fs/promises'
+import path from 'path'
+
+async function globalTeardown(config: FullConfig) {
+  console.log('🧹 Starting E2E test global teardown...')
+
+  try {
+    // 1. Clean up test database
+    console.log('📊 Cleaning up test database...')
+    await testData.cleanup()
+    
+    // 2. Clean up authentication states
+    console.log('🔐 Cleaning up authentication states...')
+    const authDir = path.join(__dirname, '.auth')
+    
+    try {
+      const authFiles = await fs.readdir(authDir)
+      for (const file of authFiles) {
+        if (file.endsWith('.json')) {
+          await fs.unlink(path.join(authDir, file))
+        }
+      }
+    } catch (error) {
+      // Auth directory might not exist, which is fine
+      console.log('Auth directory already clean or doesn\'t exist')
+    }
+    
+    // 3. Clean up temporary test files
+    console.log('📁 Cleaning up temporary files...')
+    const tempDirs = [
+      path.join(__dirname, 'tmp'),
+      path.join(__dirname, 'downloads'),
+      path.join(__dirname, 'uploads')
+    ]
+    
+    for (const dir of tempDirs) {
+      try {
+        const files = await fs.readdir(dir)
+        for (const file of files) {
+          await fs.unlink(path.join(dir, file))
+        }
+      } catch (error) {
+        // Directory might not exist, which is fine
+      }
+    }
+    
+    // 4. Organize test artifacts (if needed)
+    console.log('📋 Organizing test artifacts...')
+    const testResultsDir = path.join(__dirname, '..', 'test-results')
+    
+    try {
+      const resultFiles = await fs.readdir(testResultsDir)
+      
+      // Create organized directories
+      const currentDate = new Date().toISOString().split('T')[0]
+      const archiveDir = path.join(testResultsDir, 'archive', currentDate)
+      
+      await fs.mkdir(archiveDir, { recursive: true })
+      
+      // Move old results to archive (keep only recent ones)
+      for (const file of resultFiles) {
+        if (file.endsWith('.html') || file.endsWith('.json') || file.endsWith('.xml')) {
+          const filePath = path.join(testResultsDir, file)
+          const stats = await fs.stat(filePath)
+          
+          // Archive files older than 7 days
+          const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          if (stats.mtime < sevenDaysAgo) {
+            await fs.rename(filePath, path.join(archiveDir, file))
+          }
+        }
+      }
+    } catch (error) {
+      // Test results directory might not exist, which is fine
+      console.log('No test results to organize')
+    }
+    
+    // 5. Clear environment variables
+    console.log('🔧 Clearing test environment variables...')
+    delete process.env.E2E_ADMIN_EMAIL
+    delete process.env.E2E_ADMIN_ID
+    delete process.env.E2E_MEMBER_EMAIL
+    delete process.env.E2E_MEMBER_ID
+    delete process.env.E2E_ONBOARDING_WORKFLOW_ID
+    delete process.env.E2E_FOLLOWUP_WORKFLOW_ID
+    delete process.env.E2E_NURTURING_WORKFLOW_ID
+    
+    // 6. Performance cleanup and reporting
+    console.log('📊 Generating test performance summary...')
+    
+    try {
+      const performanceFile = path.join(__dirname, '..', 'test-results', 'performance-summary.json')
+      const performanceData = {
+        teardownTime: new Date().toISOString(),
+        testSession: {
+          completed: true,
+          duration: process.uptime(),
+          memoryUsage: process.memoryUsage(),
+          platform: process.platform,
+          nodeVersion: process.version
+        }
+      }
+      
+      await fs.writeFile(performanceFile, JSON.stringify(performanceData, null, 2))
+    } catch (error) {
+      console.log('Could not generate performance summary:', error.message)
+    }
+    
+    console.log('✅ Global teardown completed successfully')
+    
+  } catch (error) {
+    console.error('❌ Global teardown failed:', error)
+    // Don't throw error to avoid masking test failures
+    console.error('Continuing despite teardown errors...')
+  }
+}
+
+export default globalTeardown

@@ -1,0 +1,515 @@
+/**
+ * HubSpot Property Change Webhook Handler
+ * 
+ * Handles property change notifications from HubSpot for TECH Clean California objects.
+ * Processes real-time updates and synchronizes data back to NAMC Portal.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { hubspotIntegrationBridge } from '@/features/tech-clean-california/services/hubspot-integration-bridge';
+import { environmentManager } from '@/features/tech-clean-california/config/environments';
+import { ALL_PROPERTY_MAPPINGS, SYNC_RULES } from '@/features/tech-clean-california/config/hubspot-properties';
+
+interface PropertyChangePayload {
+  subscriptionId: number;
+  portalId: number;
+  appId: number;
+  eventId: string;
+  subscriptionType: string;
+  attemptNumber: number;
+  objectId: number;
+  changeSource: string;
+  eventType: string;
+  objectType: string;
+  propertyName: string;
+  propertyValue: any;
+  previousValue?: any;
+  changeFlag: 'NEW' | 'UPDATED' | 'DELETED';
+  sourceId?: string;
+  sourceType?: string;
+  occurredAt: number;
+}
+
+/**
+ * Map HubSpot object types to TECH object types
+ */
+const OBJECT_TYPE_MAP: Record<string, string> = {
+  'tech_contractor': 'contractor',
+  'tech_project': 'project',
+  'tech_customer_agreement': 'agreement',
+  'tech_documentation': 'documentation'
+};
+
+/**
+ * Properties that require immediate synchronization to NAMC Portal
+ */
+const CRITICAL_SYNC_PROPERTIES = [
+  'enrollment_status',
+  'project_status',
+  'agreement_status',
+  'verification_status',
+  'incentive_amount',
+  'payment_received'
+];
+
+/**
+ * Handle HubSpot property change webhook
+ */
+export async function POST(request: NextRequest) {
+  try {
+    console.log('🔄 Received property change webhook');
+    
+    const payload: PropertyChangePayload = await request.json();
+    
+    console.log('📊 Property change details:', {
+      objectType: payload.objectType,
+      objectId: payload.objectId,
+      propertyName: payload.propertyName,
+      propertyValue: payload.propertyValue,
+      previousValue: payload.previousValue,
+      changeFlag: payload.changeFlag
+    });
+    
+    // Verify this is a TECH object
+    const techObjectType = OBJECT_TYPE_MAP[payload.objectType];
+    if (!techObjectType) {
+      console.log('ℹ️ Non-TECH object, ignoring');
+      return NextResponse.json({ success: true, message: 'Non-TECH object ignored' });
+    }
+    
+    // Process property change
+    const result = await processPropertyChange(payload, techObjectType);
+    
+    if (result.success) {
+      console.log('✅ Property change processed successfully');
+      return NextResponse.json({
+        success: true,
+        message: result.message,
+        techObjectType,
+        syncRequired: result.syncRequired,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.error('❌ Property change processing failed:', result.error);
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      );
+    }
+    
+  } catch (error) {
+    console.error('💥 Property change webhook error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Process property changes and determine sync requirements
+ */
+async function processPropertyChange(
+  payload: PropertyChangePayload,
+  techObjectType: string
+): Promise<{ success: boolean; message?: string; error?: string; syncRequired?: boolean }> {
+  
+  try {
+    const propertyMapping = findPropertyMapping(payload.objectType, payload.propertyName);
+    
+    if (!propertyMapping) {
+      console.log(`ℹ️ Property ${payload.propertyName} not mapped, skipping sync`);
+      return {
+        success: true,
+        message: 'Property not mapped for sync',
+        syncRequired: false
+      };
+    }
+    
+    // Determine if immediate sync is required
+    const requiresSync = shouldSyncProperty(payload.propertyName, payload.changeFlag);
+    
+    if (requiresSync) {
+      await syncPropertyToNamcPortal(payload, propertyMapping);
+    }
+    
+    // Handle special property change logic
+    await handleSpecialPropertyChanges(payload, techObjectType);
+    
+    // Send webhook to integration bridge
+    await hubspotIntegrationBridge.handleWebhook({
+      eventType: 'hubspot.property.changed',
+      objectType: payload.objectType,
+      objectId: payload.objectId.toString(),
+      propertyName: payload.propertyName,
+      propertyValue: payload.propertyValue,
+      timestamp: new Date(payload.occurredAt),
+      portalId: payload.portalId.toString()
+    });
+    
+    // Log property change for auditing
+    await logPropertyChange(payload, techObjectType, requiresSync);
+    
+    return {
+      success: true,
+      message: `Property change processed for ${payload.propertyName}`,
+      syncRequired: requiresSync
+    };
+    
+  } catch (error) {
+    return {
+      success: false,
+      error: `Failed to process property change: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Sync property change back to NAMC Portal
+ */
+async function syncPropertyToNamcPortal(payload: PropertyChangePayload, propertyMapping: any): Promise<void> {
+  console.log(`🔄 Syncing property ${payload.propertyName} to NAMC Portal`);
+  
+  try {
+    // Transform value if transformation is defined
+    let syncValue = payload.propertyValue;
+    if (propertyMapping.transformation?.output) {
+      syncValue = propertyMapping.transformation.output(payload.propertyValue);
+    }
+    
+    // Determine NAMC Portal endpoint based on object type
+    const endpoint = getNamcPortalEndpoint(payload.objectType, payload.objectId);
+    
+    // Prepare update payload
+    const updatePayload = {
+      [propertyMapping.techProperty]: syncValue,
+      updatedAt: new Date().toISOString(),
+      syncSource: 'hubspot',
+      changeFlag: payload.changeFlag
+    };
+    
+    // Send update to NAMC Portal
+    await updateNamcPortalRecord(endpoint, updatePayload);
+    
+    console.log(`✅ Property ${payload.propertyName} synced successfully`);
+    
+  } catch (error) {
+    console.error(`❌ Failed to sync property ${payload.propertyName}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Handle special logic for specific property changes
+ */
+async function handleSpecialPropertyChanges(payload: PropertyChangePayload, techObjectType: string): Promise<void> {
+  const { propertyName, propertyValue, objectId } = payload;
+  
+  switch (propertyName) {
+    case 'enrollment_status':
+      await handleEnrollmentStatusChange(objectId, propertyValue);
+      break;
+      
+    case 'project_status':
+      await handleProjectStatusChange(objectId, propertyValue);
+      break;
+      
+    case 'agreement_status':
+      await handleAgreementStatusChange(objectId, propertyValue);
+      break;
+      
+    case 'verification_status':
+      await handleVerificationStatusChange(objectId, propertyValue);
+      break;
+      
+    case 'incentive_amount':
+      await handleIncentiveAmountChange(objectId, propertyValue);
+      break;
+      
+    case 'quality_score':
+      await handleQualityScoreChange(objectId, propertyValue);
+      break;
+      
+    case 'certification_level':
+      await handleCertificationLevelChange(objectId, propertyValue);
+      break;
+      
+    case 'payment_received':
+      await handlePaymentStatusChange(objectId, propertyValue);
+      break;
+  }
+}
+
+/**
+ * Handle enrollment status changes
+ */
+async function handleEnrollmentStatusChange(objectId: number, status: string): Promise<void> {
+  console.log(`👤 Contractor ${objectId} enrollment status changed to: ${status}`);
+  
+  switch (status) {
+    case 'active':
+      await enableContractorFeatures(objectId);
+      await sendWelcomeNotification(objectId);
+      break;
+      
+    case 'suspended':
+      await disableContractorFeatures(objectId);
+      await sendSuspensionNotification(objectId);
+      break;
+      
+    case 'rejected':
+      await sendRejectionNotification(objectId);
+      break;
+  }
+}
+
+/**
+ * Handle project status changes
+ */
+async function handleProjectStatusChange(objectId: number, status: string): Promise<void> {
+  console.log(`📋 Project ${objectId} status changed to: ${status}`);
+  
+  switch (status) {
+    case 'agreement_signed':
+      await scheduleInstallation(objectId);
+      break;
+      
+    case 'installation_complete':
+      await requestDocumentation(objectId);
+      break;
+      
+    case 'incentive_approved':
+      await processPayment(objectId);
+      break;
+      
+    case 'project_complete':
+      await generateCompletionReport(objectId);
+      break;
+  }
+}
+
+/**
+ * Handle agreement status changes
+ */
+async function handleAgreementStatusChange(objectId: number, status: string): Promise<void> {
+  console.log(`📄 Agreement ${objectId} status changed to: ${status}`);
+  
+  if (status === 'signed') {
+    await updateProjectStatus(objectId, 'agreement_signed');
+    await notifyContractorOfSignedAgreement(objectId);
+  }
+}
+
+/**
+ * Handle verification status changes
+ */
+async function handleVerificationStatusChange(objectId: number, status: string): Promise<void> {
+  console.log(`🔍 Documentation ${objectId} verification status changed to: ${status}`);
+  
+  switch (status) {
+    case 'approved':
+      await checkProjectDocumentationComplete(objectId);
+      break;
+      
+    case 'rejected':
+      await requestDocumentResubmission(objectId);
+      break;
+  }
+}
+
+/**
+ * Handle incentive amount changes
+ */
+async function handleIncentiveAmountChange(objectId: number, amount: number): Promise<void> {
+  console.log(`💰 Project ${objectId} incentive amount changed to: $${amount}`);
+  
+  // Update customer and contractor notifications
+  await updateIncentiveNotifications(objectId, amount);
+  
+  // Trigger recalculation of contractor metrics
+  await recalculateContractorMetrics(objectId);
+}
+
+/**
+ * Handle quality score changes
+ */
+async function handleQualityScoreChange(objectId: number, score: number): Promise<void> {
+  console.log(`⭐ Contractor ${objectId} quality score changed to: ${score}`);
+  
+  // Check if score affects contractor status
+  if (score < 70) {
+    await flagContractorForReview(objectId);
+  } else if (score >= 90) {
+    await awardContractorRecognition(objectId);
+  }
+}
+
+/**
+ * Handle certification level changes
+ */
+async function handleCertificationLevelChange(objectId: number, level: string): Promise<void> {
+  console.log(`🎓 Contractor ${objectId} certification level changed to: ${level}`);
+  
+  // Update contractor permissions based on certification level
+  await updateContractorPermissions(objectId, level);
+  
+  // Send certification achievement notification
+  await sendCertificationNotification(objectId, level);
+}
+
+/**
+ * Handle payment status changes
+ */
+async function handlePaymentStatusChange(objectId: number, received: boolean): Promise<void> {
+  console.log(`💳 Project ${objectId} payment received: ${received}`);
+  
+  if (received) {
+    await updateProjectStatus(objectId, 'payment_processed');
+    await sendPaymentConfirmation(objectId);
+  }
+}
+
+/**
+ * Utility functions
+ */
+function findPropertyMapping(objectType: string, propertyName: string): any {
+  const mappings = ALL_PROPERTY_MAPPINGS[objectType];
+  return mappings?.find(mapping => mapping.hubspotProperty === propertyName);
+}
+
+function shouldSyncProperty(propertyName: string, changeFlag: string): boolean {
+  // Always sync critical properties
+  if (CRITICAL_SYNC_PROPERTIES.includes(propertyName)) {
+    return true;
+  }
+  
+  // Sync real-time properties
+  if (SYNC_RULES.REAL_TIME.includes(propertyName)) {
+    return true;
+  }
+  
+  // Don't sync deleted properties
+  if (changeFlag === 'DELETED') {
+    return false;
+  }
+  
+  return false;
+}
+
+function getNamcPortalEndpoint(objectType: string, objectId: number): string {
+  const baseUrl = environmentManager.getNamcConfig().apiUrl;
+  const endpointMap: Record<string, string> = {
+    'tech_contractor': `${baseUrl}/tech/contractors/${objectId}`,
+    'tech_project': `${baseUrl}/tech/projects/${objectId}`,
+    'tech_customer_agreement': `${baseUrl}/tech/agreements/${objectId}`,
+    'tech_documentation': `${baseUrl}/tech/documentation/${objectId}`
+  };
+  
+  return endpointMap[objectType] || `${baseUrl}/tech/objects/${objectId}`;
+}
+
+/**
+ * Placeholder implementations for NAMC Portal integration
+ */
+async function updateNamcPortalRecord(endpoint: string, payload: any): Promise<void> {
+  console.log(`📝 Updating NAMC Portal: ${endpoint}`, payload);
+}
+
+async function logPropertyChange(payload: PropertyChangePayload, techObjectType: string, synced: boolean): Promise<void> {
+  console.log(`📊 Logging property change: ${payload.propertyName} - Synced: ${synced}`);
+}
+
+// Additional placeholder implementations for specific handlers
+async function enableContractorFeatures(objectId: number): Promise<void> {
+  console.log(`🔓 Enabling features for contractor ${objectId}`);
+}
+
+async function disableContractorFeatures(objectId: number): Promise<void> {
+  console.log(`🔒 Disabling features for contractor ${objectId}`);
+}
+
+async function sendWelcomeNotification(objectId: number): Promise<void> {
+  console.log(`📧 Sending welcome notification to contractor ${objectId}`);
+}
+
+async function sendSuspensionNotification(objectId: number): Promise<void> {
+  console.log(`📧 Sending suspension notification to contractor ${objectId}`);
+}
+
+async function sendRejectionNotification(objectId: number): Promise<void> {
+  console.log(`📧 Sending rejection notification to contractor ${objectId}`);
+}
+
+async function scheduleInstallation(objectId: number): Promise<void> {
+  console.log(`📅 Scheduling installation for project ${objectId}`);
+}
+
+async function requestDocumentation(objectId: number): Promise<void> {
+  console.log(`📄 Requesting documentation for project ${objectId}`);
+}
+
+async function processPayment(objectId: number): Promise<void> {
+  console.log(`💰 Processing payment for project ${objectId}`);
+}
+
+async function generateCompletionReport(objectId: number): Promise<void> {
+  console.log(`📊 Generating completion report for project ${objectId}`);
+}
+
+async function updateProjectStatus(objectId: number, status: string): Promise<void> {
+  console.log(`📋 Updating project ${objectId} status to ${status}`);
+}
+
+async function notifyContractorOfSignedAgreement(objectId: number): Promise<void> {
+  console.log(`📧 Notifying contractor of signed agreement ${objectId}`);
+}
+
+async function checkProjectDocumentationComplete(objectId: number): Promise<void> {
+  console.log(`✅ Checking if project ${objectId} documentation is complete`);
+}
+
+async function requestDocumentResubmission(objectId: number): Promise<void> {
+  console.log(`🔄 Requesting document resubmission for ${objectId}`);
+}
+
+async function updateIncentiveNotifications(objectId: number, amount: number): Promise<void> {
+  console.log(`📧 Updating incentive notifications for project ${objectId}: $${amount}`);
+}
+
+async function recalculateContractorMetrics(objectId: number): Promise<void> {
+  console.log(`📊 Recalculating contractor metrics for project ${objectId}`);
+}
+
+async function flagContractorForReview(objectId: number): Promise<void> {
+  console.log(`🚩 Flagging contractor ${objectId} for quality review`);
+}
+
+async function awardContractorRecognition(objectId: number): Promise<void> {
+  console.log(`🏆 Awarding recognition to contractor ${objectId}`);
+}
+
+async function updateContractorPermissions(objectId: number, level: string): Promise<void> {
+  console.log(`🔐 Updating permissions for contractor ${objectId}: ${level}`);
+}
+
+async function sendCertificationNotification(objectId: number, level: string): Promise<void> {
+  console.log(`🎓 Sending certification notification to contractor ${objectId}: ${level}`);
+}
+
+async function sendPaymentConfirmation(objectId: number): Promise<void> {
+  console.log(`💳 Sending payment confirmation for project ${objectId}`);
+}
+
+/**
+ * Health check endpoint
+ */
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    endpoint: 'property-change',
+    status: 'active',
+    supportedObjects: Object.keys(OBJECT_TYPE_MAP),
+    criticalSyncProperties: CRITICAL_SYNC_PROPERTIES,
+    environment: environmentManager.getEnvironment(),
+    timestamp: new Date().toISOString()
+  });
+}

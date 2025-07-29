@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from './prisma'
-import { AuthUser, User, AdminActionType } from '@/types'
+import { AuthUser, User, MemberType } from '@/types'
 import Logger from './logger'
 
 function getJWTSecret(): string {
@@ -166,7 +166,7 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        memberType: user.memberType,
+        memberType: user.memberType as MemberType,
         isActive: user.isActive,
         isVerified: user.isVerified,
       }
@@ -220,41 +220,22 @@ export class AuthService {
   }
 
   /**
-   * Check if user has required permissions
+   * Check if user has required permissions (simplified for minimal schema)
    */
   static async hasPermission(userId: string, resource: string, action: string): Promise<boolean> {
     try {
-      const userRoles = await prisma.userRole.findMany({
-        where: {
-          userId,
-          isActive: true,
-          role: {
-            isActive: true,
-          },
-        },
-        include: {
-          role: {
-            include: {
-              rolePermissions: {
-                include: {
-                  permission: true,
-                },
-              },
-            },
-          },
-        },
+      // Simplified permission check - admin has all permissions
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { memberType: true, isActive: true, isVerified: true }
       })
 
-      for (const userRole of userRoles) {
-        for (const rolePermission of userRole.role.rolePermissions) {
-          const permission = rolePermission.permission
-          if (permission.resource === resource && permission.action === action) {
-            return true
-          }
-        }
+      if (!user || !user.isActive || !user.isVerified) {
+        return false
       }
 
-      return false
+      // Admin has all permissions in minimal schema
+      return user.memberType === 'admin'
     } catch (error) {
       // Log permission check errors securely
       Logger.security.accessDenied(userId, `${resource}:${action}`, { error: error instanceof Error ? error.message : 'Unknown error' })
@@ -277,7 +258,7 @@ export class AuthService {
   }
 
   /**
-   * Create audit log for authentication events
+   * Create audit log for authentication events (simplified for minimal schema)
    */
   static async logAuthAction(
     action: string,
@@ -287,14 +268,14 @@ export class AuthService {
     userAgent?: string
   ): Promise<void> {
     try {
-      await prisma.adminAction.create({
-        data: {
-          action: action as AdminActionType,
-          userId,
-          details,
-          ipAddress,
-          userAgent,
-        },
+      // For minimal schema, just log to console/logger instead of database
+      Logger.audit(`Auth action: ${action}`, {
+        userId,
+        details,
+        ipAddress,
+        userAgent,
+        action,
+        timestamp: new Date().toISOString()
       })
     } catch (error) {
       // Log audit logging errors (critical for security)

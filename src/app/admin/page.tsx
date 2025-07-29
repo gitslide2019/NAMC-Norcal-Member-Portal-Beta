@@ -1,401 +1,381 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/hooks/useAuth'
+import { AdminRequiredRoute } from '@/components/auth/protected-route'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { 
-  Building2, 
-  Users, 
-  Mail, 
-  Phone, 
-  TrendingUp,
-  MapPin,
-  Calendar,
-  DollarSign,
-  Activity,
-  ArrowUpRight,
-  ArrowDownRight,
-  Eye,
-  Download
-} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import { DynamicIcon } from '@/components/ui/dynamic-icon'
 
-interface DashboardData {
-  overview: {
-    totalMembers: number
-    activeMembers: number
-    totalContractors: number
-    contractorsWithEmail: number
-    totalEvents: number
-    upcomingEvents: number
-    totalRevenue: number
-    monthlyRevenue: number
+// Mock data - in real app, this would come from API
+const mockAdminStats = {
+  totalMembers: 245,
+  activeProjects: 18,
+  pendingApplications: 7,
+  upcomingEvents: 4,
+  monthlyRevenue: 15750,
+  systemHealth: 98.5,
+}
+
+const mockRecentActivity = [
+  {
+    id: '1',
+    type: 'MEMBER_REGISTRATION',
+    description: 'New member Maria Rodriguez registered',
+    timestamp: '2 hours ago',
+    icon: 'UserPlus',
+  },
+  {
+    id: '2',
+    type: 'PROJECT_SUBMITTED',
+    description: 'Oakland Bridge Maintenance project submitted for approval',
+    timestamp: '4 hours ago',
+    icon: 'Building2',
+  },
+  {
+    id: '3',
+    type: 'EVENT_CREATED',
+    description: 'Safety Training Workshop scheduled for Feb 15',
+    timestamp: '6 hours ago',
+    icon: 'Calendar',
+  },
+  {
+    id: '4',
+    type: 'PAYMENT_RECEIVED',
+    description: 'Annual membership payment from Johnson Construction',
+    timestamp: '8 hours ago',
+    icon: 'DollarSign',
+  },
+]
+
+const mockSystemAlerts = [
+  {
+    id: '1',
+    level: 'WARNING',
+    message: 'Database backup scheduled maintenance in 2 hours',
+    timestamp: '30 minutes ago',
+  },
+  {
+    id: '2',
+    level: 'INFO',
+    message: 'Monthly newsletter sent to 245 members successfully',
+    timestamp: '2 hours ago',
+  },
+  {
+    id: '3',
+    level: 'SUCCESS',
+    message: 'HubSpot TECH integration sync completed',
+    timestamp: '4 hours ago',
+  },
+]
+
+const quickActions = [
+  {
+    name: 'Add New Member',
+    description: 'Register a new member manually',
+    href: '/admin/members/new',
+    icon: 'UserPlus',
+    color: 'bg-blue-500 hover:bg-blue-600',
+  },
+  {
+    name: 'Create Project',
+    description: 'Post a new project opportunity',
+    href: '/admin/projects/new',
+    icon: 'Building2',
+    color: 'bg-green-500 hover:bg-green-600',
+  },
+  {
+    name: 'Schedule Event',
+    description: 'Create a new networking event',
+    href: '/admin/events/new',
+    icon: 'Calendar',
+    color: 'bg-purple-500 hover:bg-purple-600',
+  },
+  {
+    name: 'Send Announcement',
+    description: 'Broadcast message to all members',
+    href: '/admin/announcements/new',
+    icon: 'Megaphone',
+    color: 'bg-orange-500 hover:bg-orange-600',
+  },
+]
+
+function getAlertColor(level: string): string {
+  switch (level) {
+    case 'ERROR':
+      return 'bg-red-100 text-red-800 border-red-200'
+    case 'WARNING':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    case 'INFO':
+      return 'bg-blue-100 text-blue-800 border-blue-200'
+    case 'SUCCESS':
+      return 'bg-green-100 text-green-800 border-green-200'
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200'
   }
-  trends: {
-    memberGrowth: number
-    contractorGrowth: number
-    emailCoverage: number
-    eventAttendance: number
-  }
-  recentActivity: Array<{
-    id: string
-    type: string
-    description: string
-    timestamp: string
-    user?: string
-  }>
-  topCounties: Array<{
-    county: string
-    count: number
-    percentage: number
-  }>
 }
 
 export default function AdminDashboard() {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
-  useEffect(() => {
-    // Mock data - replace with actual API calls
-    setTimeout(() => {
-      setDashboardData({
-        overview: {
-          totalMembers: 487,
-          activeMembers: 423,
-          totalContractors: 1358,
-          contractorsWithEmail: 864,
-          totalEvents: 24,
-          upcomingEvents: 6,
-          totalRevenue: 125000,
-          monthlyRevenue: 18500,
-        },
-        trends: {
-          memberGrowth: 12.5,
-          contractorGrowth: 8.3,
-          emailCoverage: 63.6,
-          eventAttendance: 85.2,
-        },
-        recentActivity: [
-          {
-            id: '1',
-            type: 'member_joined',
-            description: 'New member registration: Maria Gonzalez',
-            timestamp: '2 hours ago',
-            user: 'System',
-          },
-          {
-            id: '2',
-            type: 'contractor_enriched',
-            description: 'Email discovered for ABC Construction (License: 123456)',
-            timestamp: '4 hours ago',
-            user: 'Enrichment Service',
-          },
-          {
-            id: '3',
-            type: 'event_registration',
-            description: '15 new registrations for "Safety Training Workshop"',
-            timestamp: '6 hours ago',
-            user: 'Event System',
-          },
-          {
-            id: '4',
-            type: 'outreach_campaign',
-            description: 'Email campaign sent to 250 contractors in Bay Area',
-            timestamp: '1 day ago',
-            user: 'Admin User',
-          },
-        ],
-        topCounties: [
-          { county: 'Los Angeles', count: 245, percentage: 18.1 },
-          { county: 'San Diego', count: 189, percentage: 13.9 },
-          { county: 'Orange', count: 156, percentage: 11.5 },
-          { county: 'Riverside', count: 134, percentage: 9.9 },
-          { county: 'San Bernardino', count: 121, percentage: 8.9 },
-        ],
-      })
-      setLoading(false)
-    }, 1000)
-  }, [])
+  return (
+    <AdminRequiredRoute>
+      <div className="min-h-screen bg-namc-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b border-namc-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div>
+                <h1 className="text-2xl font-bold text-namc-gray-900">Admin Dashboard</h1>
+                <p className="text-namc-gray-600">Welcome back, {user?.firstName}</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <Button variant="outline" size="sm">
+                  <DynamicIcon name="Download" className="w-4 h-4 mr-2" />
+                  Export Data
+                </Button>
+                <Button size="sm">
+                  <DynamicIcon name="Settings" className="w-4 h-4 mr-2" />
+                  System Settings
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-namc-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-namc-gray-200 rounded-lg"></div>
-            ))}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-namc-gray-600">Total Members</p>
+                    <p className="text-2xl font-bold text-namc-gray-900">{mockAdminStats.totalMembers}</p>
+                  </div>
+                  <DynamicIcon name="Users" className="h-8 w-8 text-namc-blue-600" />
+                </div>
+                <div className="mt-2 flex items-center text-sm text-green-600">
+                  <DynamicIcon name="TrendingUp" className="w-4 h-4 mr-1" />
+                  <span>+12 this month</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-namc-gray-600">Active Projects</p>
+                    <p className="text-2xl font-bold text-namc-gray-900">{mockAdminStats.activeProjects}</p>
+                  </div>
+                  <DynamicIcon name="Building2" className="h-8 w-8 text-namc-green-600" />
+                </div>
+                <div className="mt-2 flex items-center text-sm text-namc-gray-600">
+                  <span>5 awaiting approval</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-namc-gray-600">Pending Apps</p>
+                    <p className="text-2xl font-bold text-namc-gray-900">{mockAdminStats.pendingApplications}</p>
+                  </div>
+                  <DynamicIcon name="Clock" className="h-8 w-8 text-namc-yellow-600" />
+                </div>
+                <div className="mt-2">
+                  <Button variant="outline" size="sm">
+                    <Link href="/admin/applications">Review</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-namc-gray-600">Upcoming Events</p>
+                    <p className="text-2xl font-bold text-namc-gray-900">{mockAdminStats.upcomingEvents}</p>
+                  </div>
+                  <DynamicIcon name="Calendar" className="h-8 w-8 text-namc-purple-600" />
+                </div>
+                <div className="mt-2 flex items-center text-sm text-namc-gray-600">
+                  <span>Next: Safety Training</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-namc-gray-600">Monthly Revenue</p>
+                    <p className="text-2xl font-bold text-namc-gray-900">
+                      ${mockAdminStats.monthlyRevenue.toLocaleString()}
+                    </p>
+                  </div>
+                  <DynamicIcon name="DollarSign" className="h-8 w-8 text-namc-green-600" />
+                </div>
+                <div className="mt-2 flex items-center text-sm text-green-600">
+                  <DynamicIcon name="TrendingUp" className="w-4 h-4 mr-1" />
+                  <span>+8.3% from last month</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-namc-gray-600">System Health</p>
+                    <p className="text-2xl font-bold text-namc-gray-900">{mockAdminStats.systemHealth}%</p>
+                  </div>
+                  <DynamicIcon name="Activity" className="h-8 w-8 text-namc-green-600" />
+                </div>
+                <div className="mt-2 flex items-center text-sm text-green-600">
+                  <span>All systems operational</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-namc-gray-900 mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {quickActions.map((action) => (
+                <Card key={action.name} className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-3 rounded-lg ${action.color}`}>
+                        <DynamicIcon name={action.icon as any} className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-namc-gray-900">{action.name}</h3>
+                        <p className="text-sm text-namc-gray-600 mt-1">{action.description}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Recent Activity */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                  <CardDescription>Latest actions and events in the system</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {mockRecentActivity.map((activity) => (
+                      <div key={activity.id} className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 bg-namc-blue-100 rounded-full flex items-center justify-center">
+                            <DynamicIcon 
+                              name={activity.icon as any} 
+                              className="w-4 h-4 text-namc-blue-600" 
+                            />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-namc-gray-900">
+                            {activity.description}
+                          </p>
+                          <p className="text-xs text-namc-gray-500">{activity.timestamp}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-6">
+                    <Button variant="outline" className="w-full">
+                      <Link href="/admin/activity">View All Activity</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* System Alerts */}
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>System Alerts</CardTitle>
+                  <CardDescription>Important system notifications</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {mockSystemAlerts.map((alert) => (
+                      <div 
+                        key={alert.id} 
+                        className={`p-3 rounded-lg border ${getAlertColor(alert.level)}`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{alert.message}</p>
+                            <p className="text-xs mt-1 opacity-75">{alert.timestamp}</p>
+                          </div>
+                          <Badge variant="secondary" className="ml-2 text-xs">
+                            {alert.level}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4">
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Link href="/admin/alerts">View All Alerts</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* TECH Integration Status */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <span>TECH Integration</span>
+                    <Badge variant="secondary" className="bg-green-100 text-green-700">
+                      Active
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>HubSpot TECH Clean California program status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-namc-gray-600">Last Sync</span>
+                      <span className="text-sm font-medium text-namc-gray-900">2 hours ago</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-namc-gray-600">Enrolled Contractors</span>
+                      <span className="text-sm font-medium text-namc-gray-900">42</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-namc-gray-600">Active Projects</span>
+                      <span className="text-sm font-medium text-namc-gray-900">8</span>
+                    </div>
+                    <div className="pt-3">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Link href="/admin/tech">Manage TECH Program</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
-    )
-  }
-
-  if (!dashboardData) return null
-
-  return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-namc-gray-900">Dashboard</h1>
-          <p className="text-namc-gray-600">
-            Welcome to the NAMC NorCal admin dashboard. Monitor your platform performance and contractor outreach.
-          </p>
-        </div>
-        
-        <div className="flex gap-3">
-          <Button variant="outline" asChild>
-            <Link href="/admin/analytics">
-              <Activity className="w-4 h-4 mr-2" />
-              View Analytics
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/admin/contractors">
-              <Building2 className="w-4 h-4 mr-2" />
-              Manage Contractors
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="relative overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-namc-gray-600">Total Members</p>
-                <p className="text-3xl font-bold text-namc-gray-900">
-                  {dashboardData.overview.totalMembers.toLocaleString()}
-                </p>
-                <div className="flex items-center mt-2">
-                  <TrendingUp className="w-4 h-4 text-namc-green-600 mr-1" />
-                  <span className="text-sm text-namc-green-600 font-medium">
-                    +{dashboardData.trends.memberGrowth}%
-                  </span>
-                  <span className="text-sm text-namc-gray-500 ml-2">this month</span>
-                </div>
-              </div>
-              <div className="p-3 bg-namc-blue-100 rounded-full">
-                <Users className="w-6 h-6 text-namc-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-namc-gray-600">CA Contractors</p>
-                <p className="text-3xl font-bold text-namc-gray-900">
-                  {dashboardData.overview.totalContractors.toLocaleString()}
-                </p>
-                <div className="flex items-center mt-2">
-                  <TrendingUp className="w-4 h-4 text-namc-green-600 mr-1" />
-                  <span className="text-sm text-namc-green-600 font-medium">
-                    +{dashboardData.trends.contractorGrowth}%
-                  </span>
-                  <span className="text-sm text-namc-gray-500 ml-2">enriched</span>
-                </div>
-              </div>
-              <div className="p-3 bg-namc-gold-100 rounded-full">
-                <Building2 className="w-6 h-6 text-namc-gold-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-namc-gray-600">Email Coverage</p>
-                <p className="text-3xl font-bold text-namc-gray-900">
-                  {dashboardData.trends.emailCoverage}%
-                </p>
-                <div className="flex items-center mt-2">
-                  <span className="text-sm text-namc-gray-600">
-                    {dashboardData.overview.contractorsWithEmail.toLocaleString()} contacts
-                  </span>
-                </div>
-              </div>
-              <div className="p-3 bg-namc-green-100 rounded-full">
-                <Mail className="w-6 h-6 text-namc-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-namc-gray-600">Monthly Revenue</p>
-                <p className="text-3xl font-bold text-namc-gray-900">
-                  ${(dashboardData.overview.monthlyRevenue / 1000).toFixed(0)}K
-                </p>
-                <div className="flex items-center mt-2">
-                  <span className="text-sm text-namc-gray-600">
-                    ${(dashboardData.overview.totalRevenue / 1000).toFixed(0)}K total
-                  </span>
-                </div>
-              </div>
-              <div className="p-3 bg-namc-red-100 rounded-full">
-                <DollarSign className="w-6 h-6 text-namc-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Recent Activity</CardTitle>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/admin/activity">
-                    <Eye className="w-4 h-4 mr-2" />
-                    View All
-                  </Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {dashboardData.recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-4 p-4 rounded-lg border border-namc-gray-200 hover:bg-namc-gray-50 transition-colors">
-                    <div className="flex-shrink-0">
-                      {activity.type === 'member_joined' && (
-                        <div className="p-2 bg-namc-blue-100 rounded-full">
-                          <Users className="w-4 h-4 text-namc-blue-600" />
-                        </div>
-                      )}
-                      {activity.type === 'contractor_enriched' && (
-                        <div className="p-2 bg-namc-green-100 rounded-full">
-                          <Building2 className="w-4 h-4 text-namc-green-600" />
-                        </div>
-                      )}
-                      {activity.type === 'event_registration' && (
-                        <div className="p-2 bg-namc-gold-100 rounded-full">
-                          <Calendar className="w-4 h-4 text-namc-gold-600" />
-                        </div>
-                      )}
-                      {activity.type === 'outreach_campaign' && (
-                        <div className="p-2 bg-namc-red-100 rounded-full">
-                          <Mail className="w-4 h-4 text-namc-red-600" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-namc-gray-900">
-                        {activity.description}
-                      </p>
-                      <div className="flex items-center mt-1 space-x-2">
-                        <span className="text-xs text-namc-gray-500">{activity.timestamp}</span>
-                        {activity.user && (
-                          <>
-                            <span className="text-xs text-namc-gray-400">•</span>
-                            <span className="text-xs text-namc-gray-500">{activity.user}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Top Counties */}
-        <div>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Top Counties</CardTitle>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/admin/contractors?view=geographic">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    View Map
-                  </Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {dashboardData.topCounties.map((county, index) => (
-                  <div key={county.county} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0 w-6 h-6 bg-namc-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-medium text-namc-blue-600">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-namc-gray-900">
-                          {county.county}
-                        </p>
-                        <p className="text-xs text-namc-gray-500">
-                          {county.percentage}% of total
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-namc-gray-900">
-                        {county.count.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/admin/contractors/export">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Contractor Data
-                  </Link>
-                </Button>
-                <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/admin/outreach/new">
-                    <Mail className="w-4 h-4 mr-2" />
-                    Create Outreach Campaign
-                  </Link>
-                </Button>
-                <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/admin/events/new">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Schedule New Event
-                  </Link>
-                </Button>
-                <Button asChild className="w-full justify-start" variant="outline">
-                  <Link href="/admin/reports">
-                    <Activity className="w-4 h-4 mr-2" />
-                    Generate Reports
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+    </AdminRequiredRoute>
   )
 }

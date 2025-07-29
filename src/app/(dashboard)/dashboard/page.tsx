@@ -1,17 +1,15 @@
 'use client'
 
 import { useAuth } from '@/hooks/useAuth'
+import { AuthRequiredRoute } from '@/components/auth/protected-route'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { DynamicIcon, usePreloadIcons, DASHBOARD_ICONS } from '@/components/ui/dynamic-icon'
-import { 
-  ProjectMetricCard, 
-  EventAttendanceCard, 
-  MessageMetricCard, 
-  CourseProgressCard 
-} from '@/components/ui/business-metric-card'
+// Removed business metric card components - disabled due to TypeScript issues
+import { TechDashboardWidget, mockTechData } from '@/components/tech/TechDashboardWidget'
+import { TechProgramCard } from '@/components/tech/TechProgramCard'
 
 // Mock data - in real app, this would come from API
 const mockStats = {
@@ -19,6 +17,13 @@ const mockStats = {
   eventsAttended: 12,
   coursesEnrolled: 3,
   messagesUnread: 5,
+}
+
+// Mock TECH enrollment data - in real app, this would come from API
+const mockTechEnrollment = {
+  isEnrolled: true, // Set to false to show program card instead
+  isEligible: true,
+  enrollmentStatus: 'active' as const
 }
 
 const mockRecentProjects = [
@@ -118,7 +123,8 @@ export default function DashboardPage() {
   usePreloadIcons(DASHBOARD_ICONS)
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <AuthRequiredRoute>
+      <div className="max-w-7xl mx-auto space-y-8">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-namc-blue-600 to-namc-blue-700 rounded-xl p-6 text-white">
         <h1 className="text-3xl font-bold mb-2">
@@ -131,35 +137,72 @@ export default function DashboardPage() {
 
       {/* Enhanced Business Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <ProjectMetricCard
-          projectsApplied={mockStats.projectsApplied}
-          weeklyChange={2}
-          variant="elevated"
-          description="Government and private sector opportunities"
-        />
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-medium text-namc-gray-600">Projects Applied</CardTitle>
+              <div className="text-2xl font-bold text-namc-gray-900">{mockStats.projectsApplied}</div>
+              <CardDescription className="text-xs">Government and private sector opportunities</CardDescription>
+            </div>
+            <DynamicIcon name="Building2" className="h-8 w-8 text-namc-blue-600" size={32} />
+          </div>
+          <div className="mt-3 flex items-center text-sm">
+            <DynamicIcon name="TrendingUp" className="w-4 h-4 text-green-500 mr-1" size={16} />
+            <span className="text-green-600">+2 this week</span>
+          </div>
+        </Card>
         
-        <EventAttendanceCard
-          eventsAttended={mockStats.eventsAttended}
-          attendanceRank={10}
-          variant="elevated"
-          description="Networking and professional development"
-        />
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-medium text-namc-gray-600">Events Attended</CardTitle>
+              <div className="text-2xl font-bold text-namc-gray-900">{mockStats.eventsAttended}</div>
+              <CardDescription className="text-xs">Networking and professional development</CardDescription>
+            </div>
+            <DynamicIcon name="Calendar" className="h-8 w-8 text-namc-green-600" size={32} />
+          </div>
+          <div className="mt-3 flex items-center text-sm">
+            <Badge variant="secondary" className="text-xs">Rank #10</Badge>
+          </div>
+        </Card>
         
-        <CourseProgressCard
-          coursesEnrolled={mockStats.coursesEnrolled}
-          coursesInProgress={2}
-          completionRate={75}
-          variant="elevated"
-          description="Professional certification programs"
-        />
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-medium text-namc-gray-600">Courses Enrolled</CardTitle>
+              <div className="text-2xl font-bold text-namc-gray-900">{mockStats.coursesEnrolled}</div>
+              <CardDescription className="text-xs">Professional certification programs</CardDescription>
+            </div>
+            <DynamicIcon name="BookOpen" className="h-8 w-8 text-namc-blue-600" size={32} />
+          </div>
+          <div className="mt-3 flex items-center text-sm">
+            <span className="text-namc-gray-600">2 in progress • 75% completion</span>
+          </div>
+        </Card>
         
-        <MessageMetricCard
-          unreadCount={mockStats.messagesUnread}
-          variant="elevated"
-          description="Business communications and opportunities"
-          href="/messages"
-        />
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-medium text-namc-gray-600">Unread Messages</CardTitle>
+              <div className="text-2xl font-bold text-namc-gray-900">{mockStats.messagesUnread}</div>
+              <CardDescription className="text-xs">Business communications and opportunities</CardDescription>
+            </div>
+            <DynamicIcon name="MessageSquare" className="h-8 w-8 text-namc-green-600" size={32} />
+          </div>
+          <div className="mt-3">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/messages">View Messages</Link>
+            </Button>
+          </div>
+        </Card>
       </div>
+
+      {/* TECH Clean California Program Section */}
+      {mockTechEnrollment.isEnrolled ? (
+        <TechDashboardWidget data={mockTechData} />
+      ) : mockTechEnrollment.isEligible ? (
+        <TechProgramCard userEligible={true} />
+      ) : null}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -292,9 +335,9 @@ export default function DashboardPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button variant="outline" className="h-20 flex-col" asChild>
-              <Link href="/projects/new">
+              <Link href={user?.memberType === 'admin' ? "/admin/projects/new" : "/projects"}>
                 <DynamicIcon name="Building2" className="w-6 h-6 mb-2" size={24} />
-                Post a Project
+                {user?.memberType === 'admin' ? 'Post a Project' : 'View Projects'}
               </Link>
             </Button>
             <Button variant="outline" className="h-20 flex-col" asChild>
@@ -312,6 +355,7 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </AuthRequiredRoute>
   )
 }

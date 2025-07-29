@@ -1,0 +1,1293 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// ENUMS
+// ========================================
+
+enum MemberType {
+  REGULAR
+  admin
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  BIDDING_OPEN
+  BIDDING_CLOSED
+  AWARDED
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectCategory {
+  RESIDENTIAL
+  COMMERCIAL
+  INFRASTRUCTURE
+  RENOVATION
+  NEW_CONSTRUCTION
+  MAINTENANCE
+  SPECIALTY
+}
+
+enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ProjectVisibility {
+  PUBLIC
+  MEMBERS_ONLY
+  INVITE_ONLY
+  PRIVATE
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum EventType {
+  NETWORKING
+  TRAINING
+  CONFERENCE
+  WORKSHOP
+  MEETING
+  AWARDS
+  FUNDRAISER
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+  ARCHIVED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentType {
+  MEMBERSHIP
+  EVENT_REGISTRATION
+  SPONSORSHIP
+  DONATION
+  TRAINING
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum CourseEnrollmentStatus {
+  ENROLLED
+  IN_PROGRESS
+  COMPLETED
+  DROPPED
+}
+
+enum AdminActionType {
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  USER_LOGIN
+  USER_LOGOUT
+  PASSWORD_RESET_ATTEMPT
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_EMAIL_SENT
+  PASSWORD_RESET_EMAIL_FAILED
+  EMAIL_VERIFICATION_SENT
+  EMAIL_VERIFICATION_FAILED
+  PROJECT_CREATED
+  PROJECT_UPDATED
+  PROJECT_DELETED
+  EVENT_CREATED
+  EVENT_UPDATED
+  EVENT_DELETED
+  PAYMENT_PROCESSED
+  MEMBERSHIP_RENEWED
+  SYSTEM_CONFIG_CHANGED
+}
+
+// ========================================
+// HUBSPOT WORKFLOW INTEGRATION ENUMS
+// ========================================
+
+enum WorkflowStatus {
+  ACTIVE
+  INACTIVE
+  PAUSED
+  ERROR
+  DRAFT
+}
+
+enum WorkflowType {
+  member_onboarding
+  member_lifecycle
+  project_matching
+  service_request
+  event_engagement
+  renewal_management
+  risk_intervention
+  training_pathway
+  committee_engagement
+  donor_cultivation
+  staff_task_automation
+  member_communication
+}
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  TIMEOUT
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  SUCCESS
+  FAILED
+  PARTIAL
+  CONFLICT
+}
+
+enum SyncDirection {
+  TO_HUBSPOT
+  FROM_HUBSPOT
+  BIDIRECTIONAL
+}
+
+enum DataType {
+  CONTACT
+  DEAL
+  COMPANY
+  TICKET
+  WORKFLOW
+  PROPERTY
+}
+
+enum AutomationTriggerType {
+  PROPERTY_CHANGE
+  LIST_MEMBERSHIP
+  WORKFLOW_ENROLLMENT
+  EVENT_COMPLETION
+  TIME_BASED
+  MANUAL
+  API_TRIGGER
+  WEBHOOK
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum MemberRiskLevel {
+  standard
+  medium_risk
+  high_risk
+  at_risk_intervention
+}
+
+// ========================================
+// USER MANAGEMENT
+// ========================================
+
+model User {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  password              String
+  firstName             String
+  lastName              String
+  company               String?
+  title                 String?
+  phone                 String?
+  
+  // Address and location
+  address               Json?     // Structured address object
+  city                  String?
+  state                 String?
+  zipCode               String?
+  coordinates           Json?     // {lat: number, lng: number}
+  
+  // Membership details
+  memberType            MemberType @default(REGULAR)
+  memberSince           DateTime  @default(now())
+  membershipExpiresAt   DateTime?
+  isActive              Boolean   @default(true)
+  isVerified            Boolean   @default(false)
+  
+  // Profile enhancements
+  profileImage          String?
+  bio                   String?
+  website               String?
+  linkedin              String?
+  twitter               String?
+  skills                String    @default("[]")
+  certifications        String?   // Array of certification objects
+  languages             String    @default("[\"English\"]")
+  
+  // Security fields
+  failedLoginAttempts   Int       @default(0)
+  lockedUntil           DateTime?
+  lastFailedLogin       DateTime?
+  lastSuccessfulLogin   DateTime?
+  twoFactorEnabled      Boolean   @default(false)
+  twoFactorSecret       String?
+  
+  // Password reset fields
+  passwordResetToken    String?
+  passwordResetExpires  DateTime?
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
+  
+  // Communication preferences
+  notificationPreferences Json?   @default("{\"email\": true, \"sms\": false, \"push\": true}")
+  
+  // HubSpot Integration
+  hubspotContactId      String?
+  lastHubspotSync       DateTime?
+  hubspotSyncStatus     SyncStatus @default(PENDING)
+  
+  // Timestamps
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  
+  // Relations
+  createdBy             User?     @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdById           String?
+  updatedBy             User?     @relation("UserUpdatedBy", fields: [updatedById], references: [id])
+  updatedById           String?
+  
+  // One-to-many relations
+  createdUsers          User[]    @relation("UserCreatedBy")
+  updatedUsers          User[]    @relation("UserUpdatedBy")
+  createdProjects       Project[] @relation("ProjectCreatedBy")
+  updatedProjects       Project[] @relation("ProjectUpdatedBy")
+  createdEvents         Event[]   @relation("EventCreatedBy")
+  updatedEvents         Event[]   @relation("EventUpdatedBy")
+  sentMessages          Message[] @relation("MessageSender")
+  receivedMessages      Message[] @relation("MessageReceiver")
+  sentAnnouncements     Announcement[]
+  eventRegistrations    EventRegistration[]
+  projectApplications   ProjectApplication[]
+  courseEnrollments     CourseEnrollment[]
+  payments              Payment[]
+  adminActions          AdminAction[] @relation("AdminActionUser")
+  targetAdminActions    AdminAction[] @relation("AdminActionTarget")
+  
+  // California contractor relation
+  contractorProfile     CaliforniaContractor?
+  
+  // Many-to-many relations
+  userRoles             UserRole[]
+  userSkills            UserSkill[]
+  
+  // HubSpot integration relations
+  memberAnalytics       MemberAnalytics?
+  
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  isSystemRole Boolean @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  userRoles   UserRole[]
+  rolePermissions RolePermission[]
+  
+  @@map("roles")
+}
+
+model Permission {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  description       String
+  resource          String
+  action            String
+  conditions        Json?
+  isSystemPermission Boolean @default(false)
+  createdAt         DateTime @default(now())
+  
+  // Relations
+  rolePermissions   RolePermission[]
+  
+  @@map("permissions")
+}
+
+model UserRole {
+  id         String   @id @default(cuid())
+  userId     String
+  roleId     String
+  assignedAt DateTime @default(now())
+  assignedBy String?
+  expiresAt  DateTime?
+  isActive   Boolean  @default(true)
+  
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id           String   @id @default(cuid())
+  roleId       String
+  permissionId String
+  grantedAt    DateTime @default(now())
+  grantedBy    String?
+  
+  // Relations
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserSkill {
+  id       String @id @default(cuid())
+  userId   String
+  skill    String
+  level    String // BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
+  verified Boolean @default(false)
+  
+  // Relations
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, skill])
+  @@map("user_skills")
+}
+
+// ========================================
+// PROJECT MANAGEMENT
+// ========================================
+
+model Project {
+  id                    String           @id @default(cuid())
+  externalId            String?          // For imported projects (SAM.gov, Caltrans, etc.)
+  source                String           @default("MANUAL")
+  
+  // Project details
+  title                 String
+  description           String
+  category              ProjectCategory
+  subcategory           String?
+  sector                Json             @default("[]")
+  
+  // Financial information
+  budgetMin             Decimal?
+  budgetMax             Decimal?
+  estimatedValue        Decimal?
+  fundingSource         String?
+  
+  // Location and geography
+  location              String?
+  coordinates           Json?            // {lat: number, lng: number}
+  serviceArea           Json?            // GeoJSON polygon
+  address               Json?            // Structured address object
+  
+  // Timeline
+  startDate             DateTime?
+  endDate               DateTime?
+  deadlineDate          DateTime?
+  estimatedDuration     Int?             // in days
+  
+  // Requirements and qualifications
+  requirements          Json             @default("[]")
+  skillsRequired        Json             @default("[]")
+  certificationsRequired Json?           // Array of certification requirements
+  experienceRequired    Int              @default(0) // years
+  bondingRequired       Boolean          @default(false)
+  insuranceRequired     Json?            // Insurance requirements object
+  
+  // Project status and metadata
+  status                ProjectStatus    @default(DRAFT)
+  priority              ProjectPriority  @default(MEDIUM)
+  visibility            ProjectVisibility @default(PUBLIC)
+  maxApplications       Int?
+  applicationCount      Int              @default(0)
+  
+  // Contact information
+  contactName           String?
+  contactEmail          String?
+  contactPhone          String?
+  organization          String?
+  
+  // Search and matching optimization
+  keywords              Json             @default("[]")
+  
+  // HubSpot Integration
+  hubspotDealId         String?
+  lastHubspotSync       DateTime?
+  hubspotSyncStatus     SyncStatus       @default(PENDING)
+  
+  // Timestamps
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  publishedAt           DateTime?
+  closedAt              DateTime?
+  deletedAt             DateTime?
+  
+  // Relations
+  createdBy             User             @relation("ProjectCreatedBy", fields: [createdById], references: [id])
+  createdById           String
+  updatedBy             User?            @relation("ProjectUpdatedBy", fields: [updatedById], references: [id])
+  updatedById           String?
+  
+  // One-to-many relations
+  projectApplications   ProjectApplication[]
+  projectFiles          ProjectFile[]
+  
+  @@map("projects")
+}
+
+model ProjectApplication {
+  id          String   @id @default(cuid())
+  projectId   String
+  userId      String
+  status      String   @default("PENDING") // PENDING, REVIEWING, APPROVED, REJECTED, WITHDRAWN
+  coverLetter String?
+  proposal    String?
+  bidAmount   Decimal?
+  submittedAt DateTime @default(now())
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  notes       String?
+  
+  // Relations
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, userId])
+  @@map("project_applications")
+}
+
+model ProjectFile {
+  id        String   @id @default(cuid())
+  projectId String
+  fileName  String
+  filePath  String
+  fileType  String
+  fileSize  Int
+  uploadedAt DateTime @default(now())
+  uploadedBy String
+  
+  // Relations
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@map("project_files")
+}
+
+// ========================================
+// EVENT MANAGEMENT
+// ========================================
+
+model Event {
+  id              String      @id @default(cuid())
+  title           String
+  description     String
+  type            EventType
+  status          EventStatus @default(DRAFT)
+  
+  // Event details
+  startDate       DateTime
+  endDate         DateTime
+  registrationDeadline DateTime?
+  maxCapacity     Int?
+  currentCapacity Int         @default(0)
+  
+  // Location
+  location        String?
+  address         Json?
+  coordinates     Json?
+  isVirtual       Boolean     @default(false)
+  virtualUrl      String?
+  
+  // Pricing
+  price           Decimal     @default(0)
+  memberPrice     Decimal?
+  earlyBirdPrice  Decimal?
+  earlyBirdDeadline DateTime?
+  
+  // Event content
+  agenda          Json?
+  speakers        Json?
+  sponsors        Json?
+  materials       Json?
+  
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  publishedAt     DateTime?
+  deletedAt       DateTime?
+  
+  // Relations
+  createdBy       User        @relation("EventCreatedBy", fields: [createdById], references: [id])
+  createdById     String
+  updatedBy       User?       @relation("EventUpdatedBy", fields: [updatedById], references: [id])
+  updatedById     String?
+  
+  // One-to-many relations
+  eventRegistrations EventRegistration[]
+  eventFiles       EventFile[]
+  
+  @@map("events")
+}
+
+model EventRegistration {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  status    String   @default("REGISTERED") // REGISTERED, ATTENDED, NO_SHOW, CANCELLED
+  paid      Boolean  @default(false)
+  paidAt    DateTime?
+  amount    Decimal?
+  notes     String?
+  registeredAt DateTime @default(now())
+  
+  // Relations
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([eventId, userId])
+  @@map("event_registrations")
+}
+
+model EventFile {
+  id        String   @id @default(cuid())
+  eventId   String
+  fileName  String
+  filePath  String
+  fileType  String
+  fileSize  Int
+  uploadedAt DateTime @default(now())
+  uploadedBy String
+  
+  // Relations
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@map("event_files")
+}
+
+// ========================================
+// COMMUNICATION SYSTEM
+// ========================================
+
+model Message {
+  id        String        @id @default(cuid())
+  senderId  String
+  receiverId String
+  subject   String?
+  content   String
+  status    MessageStatus @default(SENT)
+  readAt    DateTime?
+  sentAt    DateTime      @default(now())
+  
+  // Relations
+  sender    User          @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver  User          @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  @@map("messages")
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  senderId    String
+  targetAudience String? // ALL, REGULAR, ADMIN, SPECIFIC_GROUPS
+  targetGroups Json?    // Array of group IDs
+  isUrgent    Boolean  @default(false)
+  expiresAt   DateTime?
+  sentAt      DateTime @default(now())
+  
+  // Relations
+  sender      User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  
+  @@map("announcements")
+}
+
+// ========================================
+// LEARNING MANAGEMENT SYSTEM
+// ========================================
+
+model Course {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  status      CourseStatus @default(DRAFT)
+  
+  // Course details
+  duration    Int?         // in minutes
+  difficulty  String?      // BEGINNER, INTERMEDIATE, ADVANCED
+  category    String?
+  tags        Json         @default("[]")
+  
+  // Content
+  modules     Json?        // Array of module objects
+  requirements Json         @default("[]")
+  objectives  Json         @default("[]")
+  
+  // Pricing
+  price       Decimal      @default(0)
+  memberPrice Decimal?
+  
+  // Timestamps
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  publishedAt DateTime?
+  
+  // One-to-many relations
+  courseEnrollments CourseEnrollment[]
+  courseModules     CourseModule[]
+  
+  @@map("courses")
+}
+
+model CourseModule {
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  description String?
+  order       Int
+  duration    Int?     // in minutes
+  content     Json?    // Module content structure
+  
+  // Relations
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@map("course_modules")
+}
+
+model CourseEnrollment {
+  id          String                 @id @default(cuid())
+  courseId    String
+  userId      String
+  status      CourseEnrollmentStatus @default(ENROLLED)
+  progress    Int                    @default(0) // percentage
+  completedAt DateTime?
+  enrolledAt  DateTime               @default(now())
+  
+  // Relations
+  course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([courseId, userId])
+  @@map("course_enrollments")
+}
+
+// ========================================
+// FINANCIAL SYSTEM
+// ========================================
+
+model Payment {
+  id          String        @id @default(cuid())
+  userId      String
+  type        PaymentType
+  status      PaymentStatus @default(PENDING)
+  
+  // Payment details
+  amount      Decimal
+  currency    String        @default("USD")
+  description String?
+  referenceId String?       // External payment reference
+  
+  // Stripe integration
+  stripePaymentId String?
+  stripeCustomerId String?
+  
+  // Timestamps
+  createdAt   DateTime      @default(now())
+  processedAt DateTime?
+  
+  // Relations
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("payments")
+}
+
+model MembershipTier {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  price       Decimal
+  duration    Int      // in months
+  benefits    Json?    // Array of benefit objects
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("membership_tiers")
+}
+
+// ========================================
+// AUDIT & COMPLIANCE
+// ========================================
+
+model AdminAction {
+  id          String         @id @default(cuid())
+  action      AdminActionType
+  userId      String         // User performing the action
+  targetUserId String?       // User being acted upon
+  details     String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime       @default(now())
+  
+  // Relations
+  user        User           @relation("AdminActionUser", fields: [userId], references: [id], onDelete: Cascade)
+  targetUser  User?          @relation("AdminActionTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  
+  @@map("admin_actions")
+}
+
+// ========================================
+// ANALYTICS & FEEDBACK
+// ========================================
+
+model MemberFeedback {
+  id        String   @id @default(cuid())
+  userId    String
+  category  String   // GENERAL, FEATURE_REQUEST, BUG_REPORT, SUPPORT
+  subject   String
+  message   String
+  priority  String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  status    String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  response  String?
+  respondedAt DateTime?
+  respondedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("member_feedback")
+}
+
+model SystemMetric {
+  id        String   @id @default(cuid())
+  metric    String   // ACTIVE_USERS, PROJECT_VIEWS, EVENT_REGISTRATIONS, etc.
+  value     Float
+  metadata  Json?
+  recordedAt DateTime @default(now())
+  
+  @@map("system_metrics")
+}
+
+// ========================================
+// CALIFORNIA CONTRACTORS DATABASE
+// ========================================
+
+model CaliforniaContractor {
+  id                    String    @id @default(cuid())
+  licenseNumber         String    @unique
+  businessName          String
+  dbaName               String?
+  
+  // Contact Information (enriched)
+  email                 String?
+  emailConfidence       Int?      // 0-100 confidence score
+  emailSource           String?   // hunter_domain, hunter_company, google_business, web_search
+  emailValidated        Boolean   @default(false)
+  emailValidationScore  Int?      // 0-100 validation score
+  emailValidationDate   DateTime?
+  emailIssues           String?   // Validation issues found
+  emailType             String?   // business, professional, other
+  
+  phone                 String?
+  phoneConfidence       Int?
+  phoneSource           String?
+  phoneValidated        Boolean   @default(false)
+  phoneType             String?   // business, mobile, landline
+  
+  website               String?
+  
+  // Business Details from CSLB
+  address               String?
+  city                  String?
+  state                 String?   @default("CA")
+  zipCode               String?
+  county                String?
+  coordinates           Json?     // {lat: number, lng: number}
+  
+  // License Information
+  licenseStatus         String?
+  licenseType           String?
+  issueDate             DateTime?
+  expireDate            DateTime?
+  bondAmount            String?
+  
+  // Classifications and specialties
+  classifications       Json      @default("[]")
+  primaryClassification String?
+  specialties           Json      @default("[]")
+  
+  // Business Profile
+  businessType          String?   // Corporation, LLC, Partnership, Sole Proprietorship
+  yearsInBusiness       Int?
+  employeeCount         String?   // 1-10, 11-50, 51-200, 200+
+  
+  // Enrichment Metadata
+  priorityScore         Int?      // 0-100 targeting priority
+  dataQualityScore      Int?      // 0-100 data completeness
+  lastEnriched          DateTime?
+  enrichmentStatus      String?   // pending, processing, completed, failed, error
+  searchTerms           Json      @default("[]")
+  notes                 String?
+  
+  // Outreach Tracking
+  outreachStatus        String?   @default("not_contacted") // not_contacted, contacted, replied, interested, not_interested, member
+  lastContactDate       DateTime?
+  contactAttempts       Int       @default(0)
+  campaignTags          Json      @default("[]")
+  leadScore             Int?      // 0-100 sales lead scoring
+  
+  // NAMC Integration
+  namcMemberId          String?   @unique // Link to User table if they become member
+  isNamcMember          Boolean   @default(false)
+  membershipInterest    String?   // high, medium, low, none
+  
+  // Geographic and market data
+  serviceRadius         Int?      // Miles
+  marketAreas           Json      @default("[]")
+  competitorAnalysis    Json?     // Market intelligence
+  
+  // Raw data preservation
+  rawCslbData           String?   // Original CSLB raw text for reference
+  
+  // Timestamps
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  // Relations
+  namcMember            User?     @relation(fields: [namcMemberId], references: [id])
+  
+  @@map("california_contractors")
+}
+
+// ========================================
+// HUBSPOT WORKFLOW INTEGRATION MODELS
+// ========================================
+
+model HubSpotIntegrationConfig {
+  id                    String    @id @default(cuid())
+  portalId              String
+  apiKeyEncrypted       String
+  webhookSecret         String?
+  syncEnabled           Boolean   @default(true)
+  autoSyncInterval      Int       @default(3600) // seconds
+  lastSyncAt            DateTime?
+  syncSettings          Json      @default("{}")
+  rateLimitSettings     Json      @default("{}")
+  errorThreshold        Int       @default(10)
+  retrySettings         Json      @default("{}")
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  createdBy             String?
+  updatedBy             String?
+
+  @@map("hubspot_integration_config")
+}
+
+model HubSpotWorkflow {
+  id                      String           @id @default(cuid())
+  hubspotWorkflowId       String?          @unique
+  name                    String
+  description             String?
+  type                    WorkflowType
+  status                  WorkflowStatus   @default(DRAFT)
+  isEnabled               Boolean          @default(false)
+  
+  // Enrollment criteria
+  enrollmentCriteria      Json             @default("{}")
+  reenrollmentEnabled     Boolean          @default(false)
+  suppressForExisting     Boolean          @default(true)
+  allowMultipleEnrollments Boolean         @default(false)
+  
+  // Workflow configuration
+  workflowDefinition      Json             @default("{}")
+  goalCriteria            Json?            @default("{}")
+  personalizationTokens   Json?            @default("{}")
+  
+  // Performance settings
+  executionTimeout        Int              @default(30000) // milliseconds
+  retryAttempts          Int              @default(3)
+  batchSize              Int              @default(50)
+  
+  // Analytics and metrics
+  totalEnrollments       Int              @default(0)
+  activeEnrollments      Int              @default(0)
+  completedEnrollments   Int              @default(0)
+  conversionRate         Decimal          @default(0.00)
+  averageCompletionTime  Int?             // milliseconds
+  successRate            Decimal          @default(0.00)
+  
+  // Timestamps
+  lastExecutedAt         DateTime?
+  lastSyncAt             DateTime?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  createdBy              String?
+  updatedBy              String?
+  
+  // Relations
+  executions             HubSpotWorkflowExecution[]
+  integrationAlerts      IntegrationAlert[]
+  integrationMetrics     IntegrationMetric[]
+
+  @@map("hubspot_workflows")
+}
+
+model HubSpotWorkflowExecution {
+  id                    String          @id @default(cuid())
+  workflowId            String
+  hubspotExecutionId    String?
+  contactId             String?         // Links to User via hubspotContactId
+  dealId                String?         // Links to Project via hubspotDealId
+  
+  // Execution details
+  status                ExecutionStatus @default(PENDING)
+  enrollmentTrigger     String?         // What triggered the enrollment
+  currentStep           Int             @default(0)
+  totalSteps            Int             @default(0)
+  completionPercentage  Int             @default(0)
+  
+  // Execution data
+  executionContext      Json            @default("{}")
+  stepResults           Json            @default("[]")
+  errorDetails          String?
+  retryCount            Int             @default(0)
+  
+  // Timeline
+  enrolledAt            DateTime        @default(now())
+  startedAt             DateTime?
+  completedAt           DateTime?
+  failedAt              DateTime?
+  nextExecutionAt       DateTime?
+  
+  // Performance metrics
+  executionDuration     Int?            // milliseconds
+  stepDurations         Json            @default("[]")
+  
+  // Relations
+  workflow              HubSpotWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@map("hubspot_workflow_executions")
+}
+
+model HubSpotSyncRecord {
+  id                    String        @id @default(cuid())
+  entityType            DataType
+  entityId              String        // Local entity ID (User.id, Project.id, etc.)
+  hubspotId             String?       // HubSpot object ID
+  
+  // Sync metadata
+  syncDirection         SyncDirection
+  syncStatus            SyncStatus    @default(PENDING)
+  priority              Int           @default(0) // Higher = more priority
+  
+  // Data tracking
+  localDataHash         String?       // Hash of local data for change detection
+  hubspotDataHash       String?       // Hash of HubSpot data
+  lastLocalUpdate       DateTime?
+  lastHubspotUpdate     DateTime?
+  conflictResolution    Json          @default("{}")
+  
+  // Sync attempts
+  syncAttempts          Int           @default(0)
+  maxRetryAttempts      Int           @default(3)
+  lastSyncAttempt       DateTime?
+  lastSuccessfulSync    DateTime?
+  lastSyncError         String?
+  errorCount            Int           @default(0)
+  
+  // Field-level sync tracking
+  syncedFields          Json          @default("[]")
+  failedFields          Json          @default("[]")
+  fieldMappings         Json          @default("{}")
+  
+  // Timestamps
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  
+  @@unique([entityType, entityId])
+  @@map("hubspot_sync_records")
+}
+
+model AutomationRule {
+  id                    String                    @id @default(cuid())
+  name                  String
+  description           String?
+  isActive              Boolean                   @default(true)
+  priority              Int                       @default(0)
+  
+  // Trigger configuration
+  triggerType           AutomationTriggerType
+  triggerConditions     Json                      @default("{}")
+  triggerSchedule       String?                   // Cron expression for time-based triggers
+  
+  // Target configuration
+  targetEntityType      DataType
+  targetFilters         Json                      @default("{}")
+  
+  // Action configuration
+  actions               Json                      @default("[]")
+  actionSettings        Json                      @default("{}")
+  
+  // Execution settings
+  executionLimit        Int?                      // Max executions per time period
+  executionWindow       Int?                      // Time window in seconds
+  cooldownPeriod        Int                       @default(0) // Seconds between executions
+  timeout               Int                       @default(30000) // Milliseconds
+  
+  // Analytics
+  totalExecutions       Int                       @default(0)
+  successfulExecutions  Int                       @default(0)
+  failedExecutions      Int                       @default(0)
+  lastExecutionAt       DateTime?
+  averageExecutionTime  Int?                      // milliseconds
+  
+  // Timestamps
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+  createdBy             String?
+  updatedBy             String?
+  
+  // Relations
+  executions            AutomationExecution[]
+
+  @@map("automation_rules")
+}
+
+model AutomationExecution {
+  id                    String          @id @default(cuid())
+  ruleId                String
+  triggerData           Json            @default("{}")
+  targetEntityId        String?         // ID of the entity being acted upon
+  
+  // Execution details
+  status                ExecutionStatus @default(PENDING)
+  executionContext      Json            @default("{}")
+  actionsExecuted       Json            @default("[]")
+  results               Json            @default("{}")
+  errorDetails          String?
+  
+  // Timeline
+  triggeredAt           DateTime        @default(now())
+  startedAt             DateTime?
+  completedAt           DateTime?
+  executionDuration     Int?            // milliseconds
+  
+  // Relations
+  rule                  AutomationRule  @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@map("automation_executions")
+}
+
+model MemberAnalytics {
+  id                        String          @id @default(cuid())
+  userId                    String          @unique
+  hubspotContactId          String?
+  
+  // Engagement metrics
+  engagementScore           Int             @default(50) // 0-100
+  riskLevel                 MemberRiskLevel @default(standard)
+  healthScore               Int             @default(75) // 0-100
+  satisfactionScore         Int?            // 0-100
+  
+  // Activity metrics
+  loginFrequency            Decimal         @default(0) // Logins per week
+  lastLoginDate             DateTime?
+  sessionCount30d           Int             @default(0)
+  pageViews30d              Int             @default(0)
+  featureUsage30d           Json            @default("{}")
+  
+  // Event engagement
+  eventsAttendedTotal       Int             @default(0)
+  eventsAttended30d         Int             @default(0)
+  eventsRegistered30d       Int             @default(0)
+  eventAttendanceRate       Decimal         @default(0) // Percentage
+  
+  // Project engagement
+  projectsAppliedTotal      Int             @default(0)
+  projectsApplied30d        Int             @default(0)
+  projectsWonTotal          Int             @default(0)
+  projectSuccessRate        Decimal         @default(0) // Percentage
+  
+  // Communication engagement
+  messagesSent30d           Int             @default(0)
+  messagesReceived30d       Int             @default(0)
+  responseRate              Decimal         @default(0) // Percentage
+  responseTimeAvg           Int?            // Minutes
+  
+  // Financial metrics
+  totalSavings              Decimal         @default(0)
+  savings30d                Decimal         @default(0)
+  membershipValue           Decimal         @default(0)
+  paymentHistoryScore       Int             @default(100) // 0-100
+  
+  // Predictive scores
+  churnRiskScore            Int             @default(0) // 0-100 (higher = more risk)
+  renewalProbability        Decimal         @default(75) // Percentage
+  upgradeProbability        Decimal         @default(0) // Percentage
+  referralLikelihood        Int             @default(50) // 0-100
+  
+  // Workflow interaction
+  activeWorkflows           Json            @default("[]")
+  completedWorkflows        Json            @default("[]")
+  workflowEngagementScore   Int             @default(50) // 0-100
+  
+  // Timestamps
+  lastCalculatedAt          DateTime        @default(now())
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+  
+  // Relations
+  user                      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("member_analytics")
+}
+
+model IntegrationAlert {
+  id                    String           @id @default(cuid())
+  alertType             String           // workflow_failure, sync_error, rate_limit, etc.
+  severity              AlertSeverity
+  title                 String
+  message               String
+  details               Json             @default("{}")
+  
+  // Context
+  entityType            DataType?
+  entityId              String?
+  workflowId            String?
+  executionId           String?
+  
+  // Alert metadata
+  alertHash             String           // Hash to prevent duplicate alerts
+  occurrenceCount       Int              @default(1)
+  firstOccurredAt       DateTime         @default(now())
+  lastOccurredAt        DateTime         @default(now())
+  
+  // Resolution
+  isResolved            Boolean          @default(false)
+  resolvedAt            DateTime?
+  resolvedBy            String?
+  resolutionNotes       String?
+  autoResolved          Boolean          @default(false)
+  
+  // Notification tracking
+  notificationSent      Boolean          @default(false)
+  notificationChannels  Json             @default("[]")
+  escalationLevel       Int              @default(0)
+  
+  // Timestamps
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  
+  // Relations
+  workflow              HubSpotWorkflow? @relation(fields: [workflowId], references: [id], onDelete: SetNull)
+
+  @@map("integration_alerts")
+}
+
+model WebhookEvent {
+  id                    String          @id @default(cuid())
+  source                String          // hubspot, stripe, etc.
+  eventType             String
+  eventId               String?         // External event ID
+  subscriptionId        String?
+  
+  // Event data
+  payload               String          // JSON: full webhook payload
+  headers               Json            @default("{}")
+  signature             String?         // Webhook signature for verification
+  signatureVerified     Boolean         @default(false)
+  
+  // Processing status
+  status                ExecutionStatus @default(PENDING)
+  processingAttempts    Int             @default(0)
+  maxRetryAttempts      Int             @default(3)
+  errorMessage          String?
+  processedAt           DateTime?
+  
+  // Related entities
+  affectedEntities      Json            @default("[]")
+  triggeredWorkflows    Json            @default("[]")
+  
+  // Timestamps
+  receivedAt            DateTime        @default(now())
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@map("webhook_events")
+}
+
+model IntegrationMetric {
+  id                    String           @id @default(cuid())
+  metricType            String           // sync_performance, workflow_performance, api_usage
+  metricName            String
+  metricValue           Decimal
+  metricUnit            String?          // ms, percentage, count, etc.
+  
+  // Context and dimensions
+  entityType            DataType?
+  entityId              String?
+  workflowId            String?
+  dimensions            Json             @default("{}")
+  
+  // Aggregation metadata
+  aggregationPeriod     String?          // hourly, daily, weekly, monthly
+  sampleCount           Int              @default(1)
+  minValue              Decimal?
+  maxValue              Decimal?
+  avgValue              Decimal?
+  
+  // Timestamps
+  periodStart           DateTime
+  periodEnd             DateTime
+  recordedAt            DateTime         @default(now())
+  
+  // Relations
+  workflow              HubSpotWorkflow? @relation(fields: [workflowId], references: [id], onDelete: SetNull)
+
+  @@map("integration_metrics")
+} 

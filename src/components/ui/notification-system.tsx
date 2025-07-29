@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { X, CheckCircle, XCircle, AlertCircle, Info } from 'lucide-react'
 import { useNotifications, Notification } from '@/store'
+import { useIsHydrated } from './hydration-boundary'
 import { cn } from '@/lib/utils'
 
 const notificationIcons = {
@@ -90,9 +91,11 @@ function NotificationItem({ notification, onRemove }: NotificationItemProps) {
 }
 
 export function NotificationSystem() {
+  const isHydrated = useIsHydrated()
   const { notifications, removeNotification } = useNotifications()
 
-  if (notifications.length === 0) {
+  // Don't render until hydrated to prevent SSR mismatch
+  if (!isHydrated || notifications.length === 0) {
     return null
   }
 

@@ -66,12 +66,12 @@ export async function POST(request: NextRequest) {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        company: user.company
+        company: user.company || undefined
       },
       emailVerificationToken,
       {
         registrationDate: new Date().toISOString(),
-        company: user.company
+        company: user.company || undefined
       }
     )
 
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        company: user.company
+        company: user.company || undefined
       },
       {
         registrationDate: new Date().toISOString(),
@@ -126,13 +126,16 @@ export async function POST(request: NextRequest) {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          company: user.company,
+          company: user.company || undefined,
           isVerified: user.isVerified
         },
         emailSent: emailResult.success
       },
       'Registration successful. Please check your email to verify your account.',
-      { requestId }
+      { 
+        timestamp: new Date().toISOString(),
+        requestId 
+      }
     )
 
   } catch (error) {

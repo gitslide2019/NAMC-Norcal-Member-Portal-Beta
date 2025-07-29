@@ -1,0 +1,191 @@
+/**
+ * HubSpot Individual Workflow API Routes
+ * 
+ * RESTful API endpoints for individual workflow operations:
+ * - Get workflow details with analytics
+ * - Update workflow configuration
+ * - Delete workflow with safety checks
+ * - Workflow execution management
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { PrismaClient } from '@prisma/client'
+import { HubSpotWorkflowRepository } from '@/lib/repositories/hubspot-workflow.repository'
+import { hubspotWorkflowsService } from '@/features/hubspot/services'
+import { authenticateRequest, requireAdminAccess } from '@/lib/auth/middleware'
+import { createApiResponse, ApiError } from '@/lib/api/response'
+import { validateRequestBody } from '@/lib/api/validation'
+import { rateLimit } from '@/lib/api/rate-limiting'
+
+const prisma = new PrismaClient()
+const workflowRepository = new HubSpotWorkflowRepository(prisma)
+
+/**
+ * GET /api/hubspot/workflows/[id]
+ * Get workflow details with analytics
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 100, windowMs: 60000 })
+
+    // Authenticate request
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+
+    const workflowId = params.id
+    if (!workflowId) {
+      throw new ApiError('Workflow ID is required', 400)
+    }
+
+    // Get workflow from repository
+    const workflow = await workflowRepository.getWorkflowById(workflowId)
+    if (!workflow) {
+      throw new ApiError('Workflow not found', 404)
+    }
+
+    // Parse query parameters for analytics options
+    const url = new URL(request.url)
+    const includeAnalytics = url.searchParams.get('analytics') === 'true'
+    const includeExecutions = url.searchParams.get('executions') === 'true'
+    const daysBack = parseInt(url.searchParams.get('days') || '30')
+
+    const response: any = { workflow }
+
+    // Include analytics if requested
+    if (includeAnalytics) {
+      const endDate = new Date()
+      const startDate = new Date()
+      startDate.setDate(endDate.getDate() - daysBack)
+
+      const analytics = await workflowRepository.getExecutionMetrics(
+        workflowId,
+        startDate,
+        endDate
+      )
+      response.analytics = analytics
+    }
+
+    // Include recent executions if requested
+    if (includeExecutions) {
+      const executions = await workflowRepository.listExecutions(
+        { workflowId },
+        10
+      )
+      response.recentExecutions = executions.executions
+    }
+
+    return createApiResponse(response)
+  } catch (error) {
+    console.error('GET /api/hubspot/workflows/[id] error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to fetch workflow', 500)
+  }
+}
+
+/**
+ * PATCH /api/hubspot/workflows/[id]
+ * Partial update for workflow status changes
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 50, windowMs: 60000 })
+
+    // Authenticate and require admin access
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+    
+    await requireAdminAccess(user)
+
+    const workflowId = params.id
+    if (!workflowId) {
+      throw new ApiError('Workflow ID is required', 400)
+    }
+
+    // Validate request body for patch operations
+    const PatchWorkflowSchema = z.object({
+      isEnabled: z.boolean().optional(),
+      status: z.enum(['ACTIVE', 'INACTIVE', 'PAUSED', 'ERROR', 'DRAFT']).optional(),
+      name: z.string().min(1).max(255).optional(),
+      description: z.string().optional()
+    })
+
+    const body = await validateRequestBody(request, PatchWorkflowSchema)
+
+    // Check if workflow exists
+    const existingWorkflow = await workflowRepository.getWorkflowById(workflowId)
+    if (!existingWorkflow) {
+      throw new ApiError('Workflow not found', 404)
+    }
+
+    // Handle status changes with business logic
+    if (body.isEnabled !== undefined || body.status) {
+      const newIsEnabled = body.isEnabled ?? existingWorkflow.isEnabled
+      const newStatus = body.status ?? (newIsEnabled ? 'ACTIVE' : 'PAUSED')
+
+      // Validate status transitions
+      if (newIsEnabled && newStatus === 'DRAFT') {
+        throw new ApiError('Cannot enable a workflow in DRAFT status', 400)
+      }
+
+      if (!newIsEnabled && newStatus === 'ACTIVE') {
+        throw new ApiError('Cannot set status to ACTIVE for disabled workflow', 400)
+      }
+
+      body.isEnabled = newIsEnabled
+      body.status = newStatus
+    }
+
+    // Update workflow in local database
+    const updateData = {
+      ...body,
+      updatedBy: user.id
+    }
+
+    const updatedWorkflow = await workflowRepository.updateWorkflow(workflowId, updateData)
+
+    // Sync status changes with HubSpot
+    if (updatedWorkflow.hubspotWorkflowId && (body.isEnabled !== undefined || body.status)) {
+      try {
+        if (updatedWorkflow.isEnabled) {
+          await hubspotWorkflowsService.enableWorkflow(updatedWorkflow.hubspotWorkflowId)
+        } else {
+          await hubspotWorkflowsService.disableWorkflow(updatedWorkflow.hubspotWorkflowId)
+        }
+
+        await workflowRepository.updateWorkflow(workflowId, {
+          lastSyncAt: new Date()
+        })
+      } catch (syncError) {
+        console.error('Failed to sync workflow status with HubSpot:', syncError)
+        // Log the error but don't fail the request
+      }
+    }
+
+    return createApiResponse(updatedWorkflow, true, 'Workflow updated successfully')
+  } catch (error) {
+    console.error('PATCH /api/hubspot/workflows/[id] error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to update workflow', 500)
+  }
+}

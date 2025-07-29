@@ -1,0 +1,301 @@
+/**
+ * HubSpot Workflow Executions API Routes
+ * 
+ * RESTful API endpoints for workflow execution management:
+ * - List workflow executions with filtering
+ * - Create manual workflow executions
+ * - Monitor execution progress and status
+ * - Handle execution callbacks from HubSpot
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { PrismaClient } from '@prisma/client'
+import { HubSpotWorkflowRepository } from '@/lib/repositories/hubspot-workflow.repository'
+import { hubspotWorkflowsService } from '@/features/hubspot/services'
+import { authenticateRequest, requireAdminAccess } from '@/lib/auth/middleware'
+import { createApiResponse, ApiError } from '@/lib/api/response'
+import { validateRequestBody } from '@/lib/api/validation'
+import { rateLimit } from '@/lib/api/rate-limiting'
+
+const prisma = new PrismaClient()
+const workflowRepository = new HubSpotWorkflowRepository(prisma)
+
+// Validation schemas
+const ListExecutionsSchema = z.object({
+  status: z.string().optional(),
+  contactId: z.string().optional(),
+  dealId: z.string().optional(),
+  enrolledAfter: z.string().optional(),
+  enrolledBefore: z.string().optional(),
+  limit: z.string().optional(),
+  offset: z.string().optional()
+})
+
+const CreateExecutionSchema = z.object({
+  contactId: z.string().optional(),
+  dealId: z.string().optional(),
+  enrollmentTrigger: z.string(),
+  executionContext: z.record(z.any()).optional(),
+  overrideProperties: z.record(z.any()).optional()
+})
+
+const UpdateExecutionSchema = z.object({
+  status: z.enum(['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'TIMEOUT']),
+  currentStep: z.number().min(0).optional(),
+  completionPercentage: z.number().min(0).max(100).optional(),
+  stepResults: z.array(z.any()).optional(),
+  errorDetails: z.string().optional()
+})
+
+/**
+ * GET /api/hubspot/workflows/[id]/executions
+ * List workflow executions with filtering and pagination
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 100, windowMs: 60000 })
+
+    // Authenticate request
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+
+    const workflowId = params.id
+    if (!workflowId) {
+      throw new ApiError('Workflow ID is required', 400)
+    }
+
+    // Verify workflow exists
+    const workflow = await workflowRepository.getWorkflowById(workflowId)
+    if (!workflow) {
+      throw new ApiError('Workflow not found', 404)
+    }
+
+    // Parse and validate query parameters
+    const url = new URL(request.url)
+    const queryParams = Object.fromEntries(url.searchParams)
+    const { 
+      status, 
+      contactId, 
+      dealId, 
+      enrolledAfter, 
+      enrolledBefore, 
+      limit, 
+      offset 
+    } = ListExecutionsSchema.parse(queryParams)
+
+    // Build filters
+    const filters: any = { workflowId }
+    if (status) {
+      const statusArray = status.split(',').map(s => s.trim().toUpperCase())
+      filters.status = statusArray.length === 1 ? statusArray[0] : statusArray
+    }
+    if (contactId) filters.contactId = contactId
+    if (dealId) filters.dealId = dealId
+    if (enrolledAfter) filters.enrolledAfter = new Date(enrolledAfter)
+    if (enrolledBefore) filters.enrolledBefore = new Date(enrolledBefore)
+
+    // Get executions from repository
+    const result = await workflowRepository.listExecutions(
+      filters,
+      limit ? parseInt(limit) : 50,
+      offset ? parseInt(offset) : 0
+    )
+
+    // Calculate summary statistics
+    const statusCounts = await this.getExecutionStatusCounts(workflowId)
+
+    return createApiResponse({
+      executions: result.executions,
+      pagination: {
+        total: result.total,
+        limit: limit ? parseInt(limit) : 50,
+        offset: offset ? parseInt(offset) : 0,
+        hasMore: result.total > (parseInt(offset || '0') + parseInt(limit || '50'))
+      },
+      summary: {
+        totalExecutions: result.total,
+        statusBreakdown: statusCounts
+      }
+    })
+  } catch (error) {
+    console.error('GET /api/hubspot/workflows/[id]/executions error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to fetch executions', 500)
+  }
+}
+
+/**
+ * POST /api/hubspot/workflows/[id]/executions
+ * Create a manual workflow execution
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 20, windowMs: 60000 })
+
+    // Authenticate and require admin access for manual executions
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+    
+    await requireAdminAccess(user)
+
+    const workflowId = params.id
+    if (!workflowId) {
+      throw new ApiError('Workflow ID is required', 400)
+    }
+
+    // Verify workflow exists and is enabled
+    const workflow = await workflowRepository.getWorkflowById(workflowId)
+    if (!workflow) {
+      throw new ApiError('Workflow not found', 404)
+    }
+
+    if (!workflow.isEnabled) {
+      throw new ApiError('Cannot execute disabled workflow', 400)
+    }
+
+    // Validate request body
+    const body = await validateRequestBody(request, CreateExecutionSchema)
+
+    // Validate that either contactId or dealId is provided
+    if (!body.contactId && !body.dealId) {
+      throw new ApiError('Either contactId or dealId must be provided', 400)
+    }
+
+    // Check for existing active executions if multiple enrollments not allowed
+    if (!workflow.allowMultipleEnrollments) {
+      const activeExecutions = await workflowRepository.listExecutions({
+        workflowId,
+        contactId: body.contactId,
+        dealId: body.dealId,
+        status: ['PENDING', 'RUNNING']
+      }, 1)
+
+      if (activeExecutions.total > 0) {
+        throw new ApiError(
+          'Contact/Deal already has an active execution for this workflow',
+          409
+        )
+      }
+    }
+
+    // Create execution record
+    const executionData = {
+      workflowId,
+      contactId: body.contactId,
+      dealId: body.dealId,
+      status: 'PENDING' as const,
+      enrollmentTrigger: body.enrollmentTrigger,
+      currentStep: 0,
+      totalSteps: workflow.workflowDefinition.steps?.length || 0,
+      completionPercentage: 0,
+      executionContext: body.executionContext || {},
+      stepResults: [],
+      retryCount: 0,
+      stepDurations: []
+    }
+
+    const execution = await workflowRepository.createExecution(executionData)
+
+    // Trigger execution in HubSpot if workflow is synced
+    if (workflow.hubspotWorkflowId) {
+      try {
+        const enrollmentData: any = {
+          workflowId: workflow.hubspotWorkflowId
+        }
+
+        if (body.contactId) {
+          enrollmentData.contactId = body.contactId
+        }
+
+        if (body.dealId) {
+          enrollmentData.dealId = body.dealId
+        }
+
+        if (body.overrideProperties) {
+          enrollmentData.propertyOverrides = body.overrideProperties
+        }
+
+        const hubspotResponse = await hubspotWorkflowsService.enrollInWorkflow(
+          enrollmentData.workflowId,
+          enrollmentData
+        )
+
+        if (hubspotResponse.success) {
+          // Update execution with HubSpot execution ID
+          await workflowRepository.updateExecution(execution.id, {
+            hubspotExecutionId: hubspotResponse.data?.executionId,
+            status: 'RUNNING',
+            startedAt: new Date()
+          })
+        }
+      } catch (enrollmentError) {
+        console.error('Failed to enroll in HubSpot workflow:', enrollmentError)
+        
+        // Update execution as failed
+        await workflowRepository.updateExecution(execution.id, {
+          status: 'FAILED',
+          errorDetails: `HubSpot enrollment failed: ${enrollmentError}`,
+          failedAt: new Date()
+        })
+
+        throw new ApiError('Failed to start workflow execution in HubSpot', 500)
+      }
+    }
+
+    return createApiResponse(execution, true, 'Workflow execution created successfully', 201)
+  } catch (error) {
+    console.error('POST /api/hubspot/workflows/[id]/executions error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to create execution', 500)
+  }
+}
+
+// Helper function to get execution status counts
+async function getExecutionStatusCounts(workflowId: string): Promise<Record<string, number>> {
+  try {
+    const statusCounts = await prisma.hubSpotWorkflowExecution.groupBy({
+      by: ['status'],
+      where: { workflowId },
+      _count: { id: true }
+    })
+
+    const counts: Record<string, number> = {
+      PENDING: 0,
+      RUNNING: 0,
+      COMPLETED: 0,
+      FAILED: 0,
+      CANCELLED: 0,
+      TIMEOUT: 0
+    }
+
+    statusCounts.forEach(item => {
+      counts[item.status] = item._count.id
+    })
+
+    return counts
+  } catch (error) {
+    console.error('Failed to get status counts:', error)
+    return {}
+  }
+}

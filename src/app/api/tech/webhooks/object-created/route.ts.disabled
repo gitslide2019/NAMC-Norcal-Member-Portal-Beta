@@ -1,0 +1,481 @@
+/**
+ * HubSpot Object Creation Webhook Handler
+ * 
+ * Handles object creation notifications from HubSpot for TECH Clean California objects.
+ * Processes new contractors, projects, agreements, and documentation records.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { hubspotIntegrationBridge } from '@/features/tech-clean-california/services/hubspot-integration-bridge';
+import { environmentManager } from '@/features/tech-clean-california/config/environments';
+
+interface ObjectCreatedPayload {
+  subscriptionId: number;
+  portalId: number;
+  appId: number;
+  eventId: string;
+  subscriptionType: string;
+  attemptNumber: number;
+  objectId: number;
+  changeSource: string;
+  eventType: string;
+  objectType: string;
+  properties: Record<string, any>;
+  sourceId?: string;
+  sourceType?: string;
+  occurredAt: number;
+}
+
+/**
+ * Map HubSpot object types to TECH object types
+ */
+const OBJECT_TYPE_MAP: Record<string, string> = {
+  'tech_contractor': 'contractor',
+  'tech_project': 'project',
+  'tech_customer_agreement': 'agreement',
+  'tech_documentation': 'documentation'
+};
+
+/**
+ * Handle HubSpot object creation webhook
+ */
+export async function POST(request: NextRequest) {
+  try {
+    console.log('🆕 Received object creation webhook');
+    
+    const payload: ObjectCreatedPayload = await request.json();
+    
+    console.log('📊 Object creation details:', {
+      objectType: payload.objectType,
+      objectId: payload.objectId,
+      changeSource: payload.changeSource,
+      sourceType: payload.sourceType,
+      propertyCount: Object.keys(payload.properties || {}).length
+    });
+    
+    // Verify this is a TECH object
+    const techObjectType = OBJECT_TYPE_MAP[payload.objectType];
+    if (!techObjectType) {
+      console.log('ℹ️ Non-TECH object, ignoring');
+      return NextResponse.json({ success: true, message: 'Non-TECH object ignored' });
+    }
+    
+    // Process object creation
+    const result = await processObjectCreation(payload, techObjectType);
+    
+    if (result.success) {
+      console.log('✅ Object creation processed successfully');
+      return NextResponse.json({
+        success: true,
+        message: result.message,
+        techObjectType,
+        objectId: payload.objectId,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.error('❌ Object creation processing failed:', result.error);
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      );
+    }
+    
+  } catch (error) {
+    console.error('💥 Object creation webhook error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Process object creation and trigger appropriate actions
+ */
+async function processObjectCreation(
+  payload: ObjectCreatedPayload,
+  techObjectType: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  
+  try {
+    // Validate object properties
+    const validation = validateObjectProperties(payload.objectType, payload.properties);
+    if (!validation.valid) {
+      throw new Error(`Invalid object properties: ${validation.errors.join(', ')}`);
+    }
+    
+    // Process based on object type
+    switch (techObjectType) {
+      case 'contractor':
+        await processContractorCreation(payload);
+        break;
+        
+      case 'project':
+        await processProjectCreation(payload);
+        break;
+        
+      case 'agreement':
+        await processAgreementCreation(payload);
+        break;
+        
+      case 'documentation':
+        await processDocumentationCreation(payload);
+        break;
+        
+      default:
+        throw new Error(`Unknown object type: ${techObjectType}`);
+    }
+    
+    // Send webhook to integration bridge
+    await hubspotIntegrationBridge.handleWebhook({
+      eventType: 'hubspot.object.created',
+      objectType: payload.objectType,
+      objectId: payload.objectId.toString(),
+      timestamp: new Date(payload.occurredAt),
+      portalId: payload.portalId.toString()
+    });
+    
+    // Log object creation for auditing
+    await logObjectCreation(payload, techObjectType);
+    
+    return {
+      success: true,
+      message: `${techObjectType} object created successfully`
+    };
+    
+  } catch (error) {
+    return {
+      success: false,
+      error: `Failed to process object creation: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Process contractor creation
+ */
+async function processContractorCreation(payload: ObjectCreatedPayload): Promise<void> {
+  console.log(`👤 Processing new contractor creation: ${payload.objectId}`);
+  
+  const properties = payload.properties;
+  
+  // Create contractor record in NAMC Portal if not exists
+  const contractorExists = await checkContractorExistsInNamc(properties.namc_member_id);
+  
+  if (!contractorExists) {
+    await createContractorInNamc(payload.objectId, properties);
+  } else {
+    // Link existing NAMC contractor to HubSpot record
+    await linkContractorRecords(payload.objectId, properties.namc_member_id);
+  }
+  
+  // Check if contractor meets enrollment criteria
+  const enrollmentEligible = await checkEnrollmentEligibility(properties);
+  
+  if (enrollmentEligible) {
+    // Trigger enrollment workflow
+    await triggerContractorEnrollmentWorkflow(payload.objectId);
+  } else {
+    // Flag for manual review
+    await flagContractorForManualReview(payload.objectId, 'Enrollment eligibility check failed');
+  }
+  
+  // Set up contractor monitoring
+  await setupContractorMonitoring(payload.objectId);
+  
+  // Send welcome notification
+  await sendNewContractorNotification(payload.objectId, properties);
+}
+
+/**
+ * Process project creation
+ */
+async function processProjectCreation(payload: ObjectCreatedPayload): Promise<void> {
+  console.log(`📋 Processing new project creation: ${payload.objectId}`);
+  
+  const properties = payload.properties;
+  
+  // Validate project requirements
+  const validation = await validateProjectRequirements(properties);
+  if (!validation.valid) {
+    await flagProjectForReview(payload.objectId, validation.errors);
+    return;
+  }
+  
+  // Create project record in NAMC Portal
+  await createProjectInNamc(payload.objectId, properties);
+  
+  // Calculate initial incentive estimate
+  const incentiveEstimate = await calculateIncentiveEstimate(properties);
+  await updateProjectIncentiveEstimate(payload.objectId, incentiveEstimate);
+  
+  // Determine required documentation
+  const requiredDocs = await determineRequiredDocumentation(properties);
+  await setProjectDocumentationRequirements(payload.objectId, requiredDocs);
+  
+  // Set up project tracking
+  await setupProjectTracking(payload.objectId);
+  
+  // Notify contractor of new project
+  await notifyContractorOfNewProject(payload.objectId, properties);
+  
+  // Trigger project initiation workflow if ready
+  if (properties.project_status === 'agreement_pending') {
+    await triggerProjectInitiationWorkflow(payload.objectId);
+  }
+}
+
+/**
+ * Process agreement creation
+ */
+async function processAgreementCreation(payload: ObjectCreatedPayload): Promise<void> {
+  console.log(`📄 Processing new agreement creation: ${payload.objectId}`);
+  
+  const properties = payload.properties;
+  
+  // Validate agreement requirements
+  const projectExists = await validateProjectExists(properties.project_id);
+  if (!projectExists) {
+    throw new Error(`Project ${properties.project_id} not found for agreement ${payload.objectId}`);
+  }
+  
+  // Create agreement record in NAMC Portal
+  await createAgreementInNamc(payload.objectId, properties);
+  
+  // Generate agreement documents
+  await generateAgreementDocuments(payload.objectId, properties);
+  
+  // Set up signature tracking
+  await setupSignatureTracking(payload.objectId);
+  
+  // Send agreement to customer for signature
+  if (properties.agreement_status === 'draft') {
+    await sendAgreementForSignature(payload.objectId, properties);
+  }
+  
+  // Set up agreement monitoring
+  await setupAgreementMonitoring(payload.objectId);
+}
+
+/**
+ * Process documentation creation
+ */
+async function processDocumentationCreation(payload: ObjectCreatedPayload): Promise<void> {
+  console.log(`📄 Processing new documentation creation: ${payload.objectId}`);
+  
+  const properties = payload.properties;
+  
+  // Validate documentation requirements
+  const projectExists = await validateProjectExists(properties.project_id);
+  if (!projectExists) {
+    throw new Error(`Project ${properties.project_id} not found for documentation ${payload.objectId}`);
+  }
+  
+  // Create documentation record in NAMC Portal
+  await createDocumentationInNamc(payload.objectId, properties);
+  
+  // Validate file uploads
+  if (properties.file_urls) {
+    await validateDocumentationFiles(payload.objectId, properties.file_urls);
+  }
+  
+  // Set up verification workflow
+  await setupDocumentationVerification(payload.objectId, properties);
+  
+  // Check if all project documentation is complete
+  const allDocsComplete = await checkProjectDocumentationComplete(properties.project_id);
+  if (allDocsComplete) {
+    await triggerQualityDocumentationWorkflow(properties.project_id);
+  }
+  
+  // Notify relevant parties
+  await notifyDocumentationCreated(payload.objectId, properties);
+}
+
+/**
+ * Validation functions
+ */
+function validateObjectProperties(objectType: string, properties: Record<string, any>): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  switch (objectType) {
+    case 'tech_contractor':
+      if (!properties.namc_member_id) errors.push('NAMC Member ID is required');
+      if (!properties.enrollment_status) errors.push('Enrollment status is required');
+      if (!properties.certification_level) errors.push('Certification level is required');
+      break;
+      
+    case 'tech_project':
+      if (!properties.project_id) errors.push('Project ID is required');
+      if (!properties.contractor_id) errors.push('Contractor ID is required');
+      if (!properties.project_type) errors.push('Project type is required');
+      if (!properties.utility_territory) errors.push('Utility territory is required');
+      break;
+      
+    case 'tech_customer_agreement':
+      if (!properties.agreement_id) errors.push('Agreement ID is required');
+      if (!properties.project_id) errors.push('Project ID is required');
+      if (!properties.agreement_status) errors.push('Agreement status is required');
+      break;
+      
+    case 'tech_documentation':
+      if (!properties.doc_id) errors.push('Document ID is required');
+      if (!properties.project_id) errors.push('Project ID is required');
+      if (!properties.document_type) errors.push('Document type is required');
+      break;
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Placeholder implementations for business logic
+ * These would be implemented to integrate with actual NAMC Portal systems
+ */
+
+async function checkContractorExistsInNamc(namcMemberId: string): Promise<boolean> {
+  console.log(`🔍 Checking if contractor exists in NAMC: ${namcMemberId}`);
+  return true; // Placeholder
+}
+
+async function createContractorInNamc(objectId: number, properties: any): Promise<void> {
+  console.log(`👤 Creating contractor in NAMC: ${objectId}`);
+}
+
+async function linkContractorRecords(hubspotId: number, namcMemberId: string): Promise<void> {
+  console.log(`🔗 Linking contractor records: ${hubspotId} -> ${namcMemberId}`);
+}
+
+async function checkEnrollmentEligibility(properties: any): Promise<boolean> {
+  console.log(`✅ Checking enrollment eligibility`);
+  return true; // Placeholder
+}
+
+async function triggerContractorEnrollmentWorkflow(objectId: number): Promise<void> {
+  console.log(`📋 Triggering enrollment workflow for contractor: ${objectId}`);
+}
+
+async function flagContractorForManualReview(objectId: number, reason: string): Promise<void> {
+  console.log(`🚩 Flagging contractor for review: ${objectId} - ${reason}`);
+}
+
+async function setupContractorMonitoring(objectId: number): Promise<void> {
+  console.log(`📊 Setting up monitoring for contractor: ${objectId}`);
+}
+
+async function sendNewContractorNotification(objectId: number, properties: any): Promise<void> {
+  console.log(`📧 Sending new contractor notification: ${objectId}`);
+}
+
+async function validateProjectRequirements(properties: any): Promise<{ valid: boolean; errors: string[] }> {
+  console.log(`✅ Validating project requirements`);
+  return { valid: true, errors: [] }; // Placeholder
+}
+
+async function createProjectInNamc(objectId: number, properties: any): Promise<void> {
+  console.log(`📋 Creating project in NAMC: ${objectId}`);
+}
+
+async function calculateIncentiveEstimate(properties: any): Promise<number> {
+  console.log(`💰 Calculating incentive estimate`);
+  return 5000; // Placeholder
+}
+
+async function updateProjectIncentiveEstimate(objectId: number, estimate: number): Promise<void> {
+  console.log(`💰 Updating incentive estimate for project ${objectId}: $${estimate}`);
+}
+
+async function determineRequiredDocumentation(properties: any): Promise<string[]> {
+  console.log(`📄 Determining required documentation`);
+  return ['installation_photos', 'equipment_specs', 'invoices']; // Placeholder
+}
+
+async function setProjectDocumentationRequirements(objectId: number, requirements: string[]): Promise<void> {
+  console.log(`📋 Setting documentation requirements for project ${objectId}:`, requirements);
+}
+
+async function setupProjectTracking(objectId: number): Promise<void> {
+  console.log(`📊 Setting up tracking for project: ${objectId}`);
+}
+
+async function notifyContractorOfNewProject(objectId: number, properties: any): Promise<void> {
+  console.log(`📧 Notifying contractor of new project: ${objectId}`);
+}
+
+async function triggerProjectInitiationWorkflow(objectId: number): Promise<void> {
+  console.log(`📋 Triggering project initiation workflow: ${objectId}`);
+}
+
+async function validateProjectExists(projectId: string): Promise<boolean> {
+  console.log(`🔍 Validating project exists: ${projectId}`);
+  return true; // Placeholder
+}
+
+async function createAgreementInNamc(objectId: number, properties: any): Promise<void> {
+  console.log(`📄 Creating agreement in NAMC: ${objectId}`);
+}
+
+async function generateAgreementDocuments(objectId: number, properties: any): Promise<void> {
+  console.log(`📝 Generating agreement documents: ${objectId}`);
+}
+
+async function setupSignatureTracking(objectId: number): Promise<void> {
+  console.log(`✍️ Setting up signature tracking: ${objectId}`);
+}
+
+async function sendAgreementForSignature(objectId: number, properties: any): Promise<void> {
+  console.log(`📧 Sending agreement for signature: ${objectId}`);
+}
+
+async function setupAgreementMonitoring(objectId: number): Promise<void> {
+  console.log(`📊 Setting up agreement monitoring: ${objectId}`);
+}
+
+async function createDocumentationInNamc(objectId: number, properties: any): Promise<void> {
+  console.log(`📄 Creating documentation in NAMC: ${objectId}`);
+}
+
+async function validateDocumentationFiles(objectId: number, fileUrls: string): Promise<void> {
+  console.log(`🔍 Validating documentation files: ${objectId}`);
+}
+
+async function setupDocumentationVerification(objectId: number, properties: any): Promise<void> {
+  console.log(`✅ Setting up documentation verification: ${objectId}`);
+}
+
+async function checkProjectDocumentationComplete(projectId: string): Promise<boolean> {
+  console.log(`📋 Checking if project documentation is complete: ${projectId}`);
+  return false; // Placeholder
+}
+
+async function triggerQualityDocumentationWorkflow(projectId: string): Promise<void> {
+  console.log(`📋 Triggering quality documentation workflow: ${projectId}`);
+}
+
+async function notifyDocumentationCreated(objectId: number, properties: any): Promise<void> {
+  console.log(`📧 Notifying documentation created: ${objectId}`);
+}
+
+async function flagProjectForReview(objectId: number, errors: string[]): Promise<void> {
+  console.log(`🚩 Flagging project for review: ${objectId}`, errors);
+}
+
+async function logObjectCreation(payload: ObjectCreatedPayload, techObjectType: string): Promise<void> {
+  console.log(`📊 Logging object creation: ${techObjectType} - ${payload.objectId}`);
+}
+
+/**
+ * Health check endpoint
+ */
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    endpoint: 'object-created',
+    status: 'active',
+    supportedObjects: Object.keys(OBJECT_TYPE_MAP),
+    environment: environmentManager.getEnvironment(),
+    timestamp: new Date().toISOString()
+  });
+}

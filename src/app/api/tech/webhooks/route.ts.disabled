@@ -1,0 +1,162 @@
+/**
+ * TECH Clean California HubSpot Webhook Handlers
+ * 
+ * API routes for handling incoming webhooks from HubSpot and internal NAMC Portal events.
+ * Processes workflow status changes, property updates, and object lifecycle events.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { hubspotIntegrationBridge } from '@/features/tech-clean-california/services/hubspot-integration-bridge';
+import { environmentManager } from '@/features/tech-clean-california/config/environments';
+
+/**
+ * Webhook authentication middleware
+ */
+function authenticateWebhook(request: NextRequest): boolean {
+  const config = environmentManager.getHubSpotConfig();
+  
+  if (!config.webhooks.authToken) {
+    // Allow webhooks without auth in development
+    return environmentManager.isDevelopment();
+  }
+  
+  const authHeader = request.headers.get('authorization');
+  const signature = request.headers.get('x-hubspot-signature');
+  const providedToken = authHeader?.replace('Bearer ', '');
+  
+  // Verify auth token or HubSpot signature
+  return providedToken === config.webhooks.authToken || !!signature;
+}
+
+/**
+ * Validate webhook payload structure
+ */
+function validateWebhookPayload(payload: any): { valid: boolean; error?: string } {
+  if (!payload) {
+    return { valid: false, error: 'Empty payload' };
+  }
+  
+  const requiredFields = ['eventType', 'objectType', 'objectId'];
+  
+  for (const field of requiredFields) {
+    if (!payload[field]) {
+      return { valid: false, error: `Missing required field: ${field}` };
+    }
+  }
+  
+  return { valid: true };
+}
+
+/**
+ * Handle HubSpot workflow status webhooks
+ */
+export async function POST(request: NextRequest) {
+  try {
+    console.log('📨 Received TECH webhook request');
+    
+    // Authenticate webhook
+    if (!authenticateWebhook(request)) {
+      console.warn('❌ Webhook authentication failed');
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    // Parse request body
+    const body = await request.json();
+    console.log('📋 Webhook payload received:', {
+      eventType: body.eventType,
+      objectType: body.objectType,
+      objectId: body.objectId
+    });
+    
+    // Validate payload
+    const validation = validateWebhookPayload(body);
+    if (!validation.valid) {
+      console.warn('❌ Invalid webhook payload:', validation.error);
+      return NextResponse.json(
+        { success: false, error: validation.error },
+        { status: 400 }
+      );
+    }
+    
+    // Process webhook through integration bridge
+    const result = await hubspotIntegrationBridge.handleWebhook({
+      eventType: body.eventType,
+      objectType: body.objectType,
+      objectId: body.objectId,
+      propertyName: body.propertyName,
+      propertyValue: body.propertyValue,
+      timestamp: new Date(body.timestamp || Date.now()),
+      portalId: body.portalId || environmentManager.getHubSpotConfig().portalId
+    });
+    
+    if (result.success) {
+      console.log('✅ Webhook processed successfully');
+      return NextResponse.json({
+        success: true,
+        message: result.message,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.error('❌ Webhook processing failed:', result.message);
+      return NextResponse.json(
+        { success: false, error: result.message },
+        { status: 500 }
+      );
+    }
+    
+  } catch (error) {
+    console.error('💥 Webhook processing error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Handle webhook health checks
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const health = await hubspotIntegrationBridge.healthCheck();
+    const stats = hubspotIntegrationBridge.getSyncStatistics();
+    
+    return NextResponse.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      environment: environmentManager.getEnvironment(),
+      integration: health,
+      statistics: stats
+    });
+    
+  } catch (error) {
+    console.error('Health check error:', error);
+    return NextResponse.json(
+      { status: 'unhealthy', error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Handle webhook configuration requests
+ */
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json({
+    supportedEvents: [
+      'contractor.enrollment.completed',
+      'project.status.changed',
+      'agreement.signed',
+      'document.verification.completed',
+      'incentive.processing.completed',
+      'hubspot.property.changed',
+      'hubspot.workflow.enrolled'
+    ],
+    webhookUrl: `${environmentManager.getNamcConfig().baseUrl}/api/tech/webhooks`,
+    authenticationRequired: !environmentManager.isDevelopment(),
+    environment: environmentManager.getEnvironment()
+  });
+}

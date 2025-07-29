@@ -1,0 +1,91 @@
+/**
+ * Playwright Global Setup
+ * 
+ * Global setup script that runs before all E2E tests:
+ * - Database initialization and seeding
+ * - Authentication state preparation
+ * - Environment configuration
+ * - Test data cleanup and preparation
+ */
+
+import { chromium, FullConfig } from '@playwright/test'
+import { testData } from './fixtures/test-data'
+import path from 'path'
+
+async function globalSetup(config: FullConfig) {
+  console.log('🚀 Starting E2E test global setup...')
+
+  try {
+    // 1. Clean and prepare database
+    console.log('📊 Preparing test database...')
+    await testData.cleanDatabase()
+    
+    // 2. Seed basic test data
+    console.log('🌱 Seeding test data...')
+    const seedData = await testData.seedBasicData()
+    
+    // 3. Create authentication states for different user types
+    console.log('🔐 Creating authentication states...')
+    
+    // Admin authentication state
+    const browser = await chromium.launch()
+    const adminContext = await browser.newContext()
+    const adminPage = await adminContext.newPage()
+    
+    // Login as admin and save auth state
+    await adminPage.goto('http://localhost:3000/login')
+    await adminPage.fill('[data-testid="email"]', seedData.admin.email)
+    await adminPage.fill('[data-testid="password"]', 'admin123')
+    await adminPage.click('[data-testid="login-button"]')
+    
+    // Wait for login to complete
+    await adminPage.waitForURL('**/admin/**')
+    
+    // Save admin authentication state
+    await adminContext.storageState({ 
+      path: path.join(__dirname, '.auth', 'admin.json') 
+    })
+    
+    // Member authentication state
+    const memberContext = await browser.newContext()
+    const memberPage = await memberContext.newPage()
+    
+    await memberPage.goto('http://localhost:3000/login')
+    await memberPage.fill('[data-testid="email"]', seedData.members[0].email)
+    await memberPage.fill('[data-testid="password"]', 'test123')
+    await memberPage.click('[data-testid="login-button"]')
+    
+    // Wait for login to complete
+    await memberPage.waitForURL('**/dashboard**')
+    
+    // Save member authentication state
+    await memberContext.storageState({ 
+      path: path.join(__dirname, '.auth', 'member.json') 
+    })
+    
+    await adminPage.close()
+    await memberPage.close()
+    await adminContext.close()
+    await memberContext.close()
+    await browser.close()
+    
+    // 4. Set up environment variables for tests
+    process.env.E2E_ADMIN_EMAIL = seedData.admin.email
+    process.env.E2E_ADMIN_ID = seedData.admin.id
+    process.env.E2E_MEMBER_EMAIL = seedData.members[0].email
+    process.env.E2E_MEMBER_ID = seedData.members[0].id
+    
+    // Store workflow IDs for tests
+    process.env.E2E_ONBOARDING_WORKFLOW_ID = seedData.workflows[0].id
+    process.env.E2E_FOLLOWUP_WORKFLOW_ID = seedData.workflows[1].id
+    process.env.E2E_NURTURING_WORKFLOW_ID = seedData.workflows[2].id
+    
+    console.log('✅ Global setup completed successfully')
+    
+  } catch (error) {
+    console.error('❌ Global setup failed:', error)
+    throw error
+  }
+}
+
+export default globalSetup

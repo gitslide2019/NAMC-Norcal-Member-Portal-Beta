@@ -1,0 +1,485 @@
+/**
+ * Authentication and Authorization Middleware
+ * 
+ * Security middleware for NAMC API endpoints:
+ * - JWT token validation and user authentication
+ * - Role-based access control (RBAC)
+ * - Admin permission checks
+ * - Request context and user session management
+ * - Security logging and audit trails
+ */
+
+import { NextRequest } from 'next/server'
+import { verify } from 'jsonwebtoken'
+import { PrismaClient } from '@prisma/client'
+import { ApiError } from '@/lib/api/response'
+
+const prisma = new PrismaClient()
+
+export interface AuthenticatedUser {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  memberType: 'REGULAR' | 'admin'
+  isActive: boolean
+  hubspotContactId?: string
+  lastLoginAt?: Date
+  createdAt: Date
+}
+
+export interface RequestContext {
+  user: AuthenticatedUser
+  requestId: string
+  timestamp: Date
+  userAgent?: string
+  ip?: string
+}
+
+/**
+ * Extract and validate JWT token from request
+ */
+export async function authenticateRequest(
+  request: NextRequest
+): Promise<AuthenticatedUser | null> {
+  try {
+    // Extract token from Authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null
+    }
+
+    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
+
+    // Verify JWT token
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+      throw new Error('JWT_SECRET not configured')
+    }
+
+    const decoded = verify(token, jwtSecret) as any
+    if (!decoded.userId) {
+      throw new Error('Invalid token payload')
+    }
+
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        memberType: true,
+        isActive: true,
+        // hubspotContactId: true, // Field doesn't exist in current schema
+        // lastLoginAt: true, // Field doesn't exist in current schema
+        createdAt: true
+      }
+    })
+
+    if (!user) {
+      throw new Error('User not found')
+    }
+
+    if (!user.isActive) {
+      throw new Error('User account is inactive')
+    }
+
+    // Update last seen timestamp
+    // Update last login time - commented out due to schema mismatch
+    // await prisma.user.update({
+    //   where: { id: user.id },
+    //   data: { lastLoginAt: new Date() }
+    // })
+
+    return user as AuthenticatedUser
+  } catch (error) {
+    console.error('Authentication error:', error)
+    return null
+  }
+}
+
+/**
+ * Require valid authentication - throws error if not authenticated
+ */
+export async function requireAuthentication(
+  request: NextRequest
+): Promise<AuthenticatedUser> {
+  const user = await authenticateRequest(request)
+  if (!user) {
+    throw new ApiError('Authentication required', 401, 'AUTHENTICATION_REQUIRED')
+  }
+  return user
+}
+
+/**
+ * Require admin access - throws error if user is not admin
+ */
+export async function requireAdminAccess(
+  user: AuthenticatedUser
+): Promise<void> {
+  if (user.memberType !== 'admin') {
+    throw new ApiError(
+      'Admin access required',
+      403,
+      'INSUFFICIENT_PERMISSIONS',
+      { requiredRole: 'admin', userRole: user.memberType }
+    )
+  }
+}
+
+/**
+ * Check if user has specific permissions
+ */
+export function hasPermission(
+  user: AuthenticatedUser,
+  permission: string
+): boolean {
+  // Define permission hierarchy
+  const permissions = {
+    admin: [
+      // All permissions
+      'users:read',
+      'users:write',
+      'users:delete',
+      'workflows:read',
+      'workflows:write',
+      'workflows:delete',
+      'workflows:execute',
+      'analytics:read',
+      'analytics:export',
+      'sync:read',
+      'sync:write',
+      'members:read',
+      'members:write',
+      'members:delete',
+      'projects:read',
+      'projects:write',
+      'projects:delete',
+      'events:read',
+      'events:write',
+      'events:delete',
+      'resources:read',
+      'resources:write',
+      'resources:delete',
+      'messages:read',
+      'messages:write',
+      'announcements:read',
+      'announcements:write',
+      'announcements:delete',
+      'admin:read',
+      'admin:write'
+    ],
+    REGULAR: [
+      // Regular member permissions
+      'workflows:read',
+      'analytics:read',
+      'members:read',
+      'projects:read',
+      'projects:write', // Can apply to projects
+      'events:read',
+      'events:write', // Can register for events
+      'resources:read',
+      'messages:read',
+      'messages:write',
+      'announcements:read'
+    ]
+  }
+
+  const userPermissions = permissions[user.memberType] || []
+  return userPermissions.includes(permission)
+}
+
+/**
+ * Require specific permission
+ */
+export function requirePermission(
+  user: AuthenticatedUser,
+  permission: string
+): void {
+  if (!hasPermission(user, permission)) {
+    throw new ApiError(
+      `Permission denied: ${permission}`,
+      403,
+      'INSUFFICIENT_PERMISSIONS',
+      { requiredPermission: permission, userRole: user.memberType }
+    )
+  }
+}
+
+/**
+ * Check if user can access specific resource
+ */
+export async function canAccessResource(
+  user: AuthenticatedUser,
+  resourceType: string,
+  resourceId: string
+): Promise<boolean> {
+  // Admin can access everything
+  if (user.memberType === 'admin') {
+    return true
+  }
+
+  switch (resourceType) {
+    case 'user':
+      // Users can only access their own profile
+      return user.id === resourceId
+
+    case 'workflow_execution':
+      // Check if execution belongs to user
+      const execution = await prisma.hubSpotWorkflowExecution.findUnique({
+        where: { id: resourceId },
+        include: {
+          workflow: true
+        }
+      })
+      
+      if (!execution) return false
+      
+      // Users can view executions for workflows they're enrolled in
+      return execution.contactId === user.hubspotContactId
+
+    case 'member_analytics':
+      // Check if analytics belong to user
+      const analytics = await prisma.memberAnalytics.findUnique({
+        where: { id: resourceId }
+      })
+      
+      return analytics?.userId === user.id
+
+    case 'project':
+      // Users can access projects they've applied to or public projects
+      const project = await prisma.project.findUnique({
+        where: { id: resourceId },
+        include: {
+          applications: {
+            where: { userId: user.id }
+          }
+        }
+      })
+      
+      return project ? 
+        (project.applications.length > 0 || project.isPublic) : false
+
+    case 'event':
+      // Users can access events they're registered for or public events
+      const event = await prisma.event.findUnique({
+        where: { id: resourceId },
+        include: {
+          registrations: {
+            where: { userId: user.id }
+          }
+        }
+      })
+      
+      return event ? 
+        (event.registrations.length > 0 || event.isPublic) : false
+
+    case 'message':
+      // Users can access messages they sent or received
+      const message = await prisma.message.findUnique({
+        where: { id: resourceId }
+      })
+      
+      return message ? 
+        (message.senderId === user.id || message.recipientId === user.id) : false
+
+    default:
+      return false
+  }
+}
+
+/**
+ * Require resource access
+ */
+export async function requireResourceAccess(
+  user: AuthenticatedUser,
+  resourceType: string,
+  resourceId: string
+): Promise<void> {
+  const hasAccess = await canAccessResource(user, resourceType, resourceId)
+  if (!hasAccess) {
+    throw new ApiError(
+      `Access denied to ${resourceType}`,
+      403,
+      'RESOURCE_ACCESS_DENIED',
+      { resourceType, resourceId, userId: user.id }
+    )
+  }
+}
+
+/**
+ * Create request context with user information
+ */
+export function createRequestContext(
+  request: NextRequest,
+  user: AuthenticatedUser
+): RequestContext {
+  return {
+    user,
+    requestId: generateRequestId(),
+    timestamp: new Date(),
+    userAgent: request.headers.get('user-agent') || undefined,
+    ip: getClientIP(request)
+  }
+}
+
+/**
+ * Extract client IP address from request
+ */
+export function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIP = request.headers.get('x-real-ip')
+  const ip = request.ip
+
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+  
+  if (realIP) {
+    return realIP
+  }
+  
+  return ip || 'unknown'
+}
+
+/**
+ * Generate unique request ID
+ */
+export function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
+/**
+ * Log security events for audit trail
+ */
+export async function logSecurityEvent(
+  eventType: string,
+  user: AuthenticatedUser | null,
+  details: any,
+  request: NextRequest
+): Promise<void> {
+  try {
+    const securityEvent = {
+      eventType,
+      userId: user?.id,
+      userEmail: user?.email,
+      ip: getClientIP(request),
+      userAgent: request.headers.get('user-agent'),
+      details: JSON.stringify(details),
+      timestamp: new Date()
+    }
+
+    // In production, send to security logging service
+    console.log('Security Event:', securityEvent)
+
+    // Store critical security events in database
+    if (['login_failed', 'access_denied', 'admin_action'].includes(eventType)) {
+      await prisma.adminAction.create({
+        data: {
+          action: eventType.toUpperCase(),
+          userId: user?.id || 'anonymous',
+          details: securityEvent.details,
+          timestamp: securityEvent.timestamp
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Failed to log security event:', error)
+    // Don't throw error to avoid disrupting the main flow
+  }
+}
+
+/**
+ * Rate limiting by user ID
+ */
+export function getUserRateLimitKey(user: AuthenticatedUser): string {
+  return `user:${user.id}`
+}
+
+/**
+ * Session validation - check if user session is still valid
+ */
+export async function validateUserSession(
+  user: AuthenticatedUser
+): Promise<boolean> {
+  try {
+    // Check if user still exists and is active
+    const currentUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { isActive: true, memberType: true }
+    })
+
+    if (!currentUser || !currentUser.isActive) {
+      return false
+    }
+
+    // Check if user role has changed
+    if (currentUser.memberType !== user.memberType) {
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Session validation error:', error)
+    return false
+  }
+}
+
+/**
+ * Middleware wrapper for authentication
+ */
+export function withAuth(requireAdmin: boolean = false) {
+  return async (request: NextRequest): Promise<AuthenticatedUser> => {
+    const user = await requireAuthentication(request)
+    
+    if (requireAdmin) {
+      await requireAdminAccess(user)
+    }
+
+    // Validate session
+    const isValidSession = await validateUserSession(user)
+    if (!isValidSession) {
+      throw new ApiError('Session expired', 401, 'SESSION_EXPIRED')
+    }
+
+    return user
+  }
+}
+
+/**
+ * CORS middleware for API endpoints
+ */
+export function setCorsHeaders(request: NextRequest): Headers {
+  const headers = new Headers()
+  
+  const origin = request.headers.get('origin')
+  const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000']
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    headers.set('Access-Control-Allow-Origin', origin)
+  }
+  
+  headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+  headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID')
+  headers.set('Access-Control-Allow-Credentials', 'true')
+  headers.set('Access-Control-Max-Age', '86400')
+  
+  return headers
+}
+
+/**
+ * Security headers middleware
+ */
+export function setSecurityHeaders(): Headers {
+  const headers = new Headers()
+  
+  headers.set('X-Content-Type-Options', 'nosniff')
+  headers.set('X-Frame-Options', 'DENY')
+  headers.set('X-XSS-Protection', '1; mode=block')
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  headers.set('Content-Security-Policy', "default-src 'self'")
+  
+  return headers
+}

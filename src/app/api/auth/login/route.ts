@@ -56,7 +56,10 @@ export async function POST(request: NextRequest) {
       token // Include token for client-side use if needed
     }
     
-    const response = createSuccessResponse(responseData, 'Login successful', { requestId })
+    const response = createSuccessResponse(responseData, 'Login successful', { 
+      timestamp: new Date().toISOString(),
+      requestId 
+    })
 
     // Set secure httpOnly cookie
     const cookieMaxAge = rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60 // 30 days or 7 days

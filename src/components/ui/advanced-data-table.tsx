@@ -180,7 +180,7 @@ export function AdvancedDataTable<T extends { id: string }>({
       newFilters[columnKey] = {
         type: column.filterType || 'text',
         value,
-        operator,
+        operator: operator as "endsWith" | "startsWith" | "equals" | "contains" | "gte" | "gt" | "lt" | "lte" | undefined,
       }
     }
     onFilter(newFilters)

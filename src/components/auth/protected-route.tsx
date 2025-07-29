@@ -2,7 +2,7 @@
 
 import { useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/auth-context'
+import { useAuth } from '@/auth/unified-auth'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 interface ProtectedRouteProps {
@@ -20,15 +20,16 @@ export function ProtectedRoute({
   redirectTo,
   fallback
 }: ProtectedRouteProps) {
-  const { user, isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading, hasHydrated } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (isLoading) return
+    // Don't redirect until hydration is complete and we're not loading
+    if (!hasHydrated || isLoading) return
 
     // If authentication is required but user is not authenticated
     if (requireAuth && !isAuthenticated) {
-      router.push(redirectTo || '/auth/login')
+      router.push(redirectTo || '/login')
       return
     }
 
@@ -39,26 +40,28 @@ export function ProtectedRoute({
     }
 
     // If user is authenticated but accessing auth pages, redirect to dashboard
-    if (isAuthenticated && window.location.pathname.startsWith('/auth/')) {
+    if (isAuthenticated && typeof window !== 'undefined' && window.location.pathname.startsWith('/login')) {
       const redirect = user?.memberType === 'admin' ? '/admin/dashboard' : '/dashboard'
       router.push(redirect)
       return
     }
-  }, [isAuthenticated, user, isLoading, requireAuth, requireAdmin, router, redirectTo])
+  }, [isAuthenticated, user, isLoading, hasHydrated, requireAuth, requireAdmin, router, redirectTo])
 
-  // Show loading spinner while checking authentication
-  if (isLoading) {
+  // Show loading spinner while hydrating or checking authentication
+  if (!hasHydrated || isLoading) {
     return fallback || (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <LoadingSpinner size="lg" />
-          <p className="text-muted-foreground">Checking authentication...</p>
+          <p className="text-muted-foreground">
+            {!hasHydrated ? 'Loading...' : 'Checking authentication...'}
+          </p>
         </div>
       </div>
     )
   }
 
-  // Show loading spinner while redirecting
+  // Show loading spinner while redirecting (auth required but not authenticated)
   if (requireAuth && !isAuthenticated) {
     return fallback || (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -70,7 +73,7 @@ export function ProtectedRoute({
     )
   }
 
-  // Show loading spinner for admin check
+  // Show loading spinner for admin check (admin required but user not admin)
   if (requireAdmin && user?.memberType !== 'admin') {
     return fallback || (
       <div className="min-h-screen bg-background flex items-center justify-center">

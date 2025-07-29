@@ -1,0 +1,451 @@
+/**
+ * HubSpot Analytics API Routes
+ * 
+ * RESTful API endpoints for HubSpot integration analytics:
+ * - Workflow performance metrics and trends
+ * - Member engagement analytics
+ * - Data synchronization health
+ * - ROI and business impact analysis
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { PrismaClient } from '@prisma/client'
+import { HubSpotWorkflowRepository } from '@/lib/repositories/hubspot-workflow.repository'
+import { MemberAnalyticsRepository } from '@/lib/repositories/member-analytics.repository'
+import { authenticateRequest, requireAdminAccess } from '@/lib/auth/middleware'
+import { createApiResponse, ApiError } from '@/lib/api/response'
+import { rateLimit } from '@/lib/api/rate-limiting'
+
+const prisma = new PrismaClient()
+const workflowRepository = new HubSpotWorkflowRepository(prisma)
+const analyticsRepository = new MemberAnalyticsRepository(prisma)
+
+// Validation schemas
+const AnalyticsQuerySchema = z.object({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  workflowIds: z.string().optional(), // Comma-separated list
+  includeComparison: z.string().optional(),
+  granularity: z.enum(['daily', 'weekly', 'monthly']).optional()
+})
+
+const WorkflowComparisonSchema = z.object({
+  workflowIds: z.array(z.string()).min(1).max(10),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  metrics: z.array(z.enum([
+    'enrollments',
+    'completions', 
+    'conversion_rate',
+    'avg_completion_time',
+    'success_rate'
+  ])).optional()
+})
+
+/**
+ * GET /api/hubspot/analytics
+ * Get comprehensive HubSpot integration analytics
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 50, windowMs: 60000 })
+
+    // Authenticate request (admin access required for analytics)
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+    
+    await requireAdminAccess(user)
+
+    // Parse and validate query parameters
+    const url = new URL(request.url)
+    const queryParams = Object.fromEntries(url.searchParams)
+    const { 
+      startDate, 
+      endDate, 
+      workflowIds, 
+      includeComparison,
+      granularity 
+    } = AnalyticsQuerySchema.parse(queryParams)
+
+    // Set default date range (last 30 days)
+    const endDateTime = endDate ? new Date(endDate) : new Date()
+    const startDateTime = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+    // Parse workflow IDs if provided
+    const workflowIdArray = workflowIds ? workflowIds.split(',').map(id => id.trim()) : undefined
+
+    // Get comprehensive analytics
+    const [
+      workflowAnalytics,
+      memberTrends,
+      syncHealthMetrics,
+      businessImpact
+    ] = await Promise.all([
+      getWorkflowAnalytics(startDateTime, endDateTime, workflowIdArray),
+      getMemberEngagementTrends(startDateTime, endDateTime, granularity || 'weekly'),
+      getSyncHealthMetrics(startDateTime, endDateTime),
+      getBusinessImpactMetrics(startDateTime, endDateTime)
+    ])
+
+    const response: any = {
+      dateRange: {
+        startDate: startDateTime.toISOString(),
+        endDate: endDateTime.toISOString()
+      },
+      overview: {
+        totalWorkflows: workflowAnalytics.totalWorkflows,
+        activeWorkflows: workflowAnalytics.activeWorkflows,
+        totalExecutions: workflowAnalytics.totalExecutions,
+        successRate: workflowAnalytics.successfulExecutions > 0 ? 
+          (workflowAnalytics.successfulExecutions / workflowAnalytics.totalExecutions * 100).toFixed(2) : '0',
+        averageCompletionTime: workflowAnalytics.averageCompletionTime
+      },
+      workflowPerformance: {
+        topPerforming: workflowAnalytics.topPerformingWorkflows,
+        recentFailures: workflowAnalytics.recentFailures,
+        conversionRate: workflowAnalytics.conversionRate
+      },
+      memberEngagement: {
+        trends: memberTrends,
+        summary: await getMemberEngagementSummary()
+      },
+      syncHealth: syncHealthMetrics,
+      businessImpact: businessImpact
+    }
+
+    // Include period comparison if requested
+    if (includeComparison === 'true') {
+      const comparisonPeriodStart = new Date(startDateTime)
+      comparisonPeriodStart.setTime(
+        comparisonPeriodStart.getTime() - (endDateTime.getTime() - startDateTime.getTime())
+      )
+
+      const comparisonAnalytics = await getWorkflowAnalytics(
+        comparisonPeriodStart,
+        startDateTime,
+        workflowIdArray
+      )
+
+      response.comparison = {
+        previousPeriod: {
+          startDate: comparisonPeriodStart.toISOString(),
+          endDate: startDateTime.toISOString()
+        },
+        metrics: {
+          executionsChange: calculatePercentageChange(
+            comparisonAnalytics.totalExecutions,
+            workflowAnalytics.totalExecutions
+          ),
+          successRateChange: calculatePercentageChange(
+            comparisonAnalytics.successfulExecutions / (comparisonAnalytics.totalExecutions || 1) * 100,
+            workflowAnalytics.successfulExecutions / (workflowAnalytics.totalExecutions || 1) * 100
+          ),
+          completionTimeChange: calculatePercentageChange(
+            comparisonAnalytics.averageCompletionTime,
+            workflowAnalytics.averageCompletionTime
+          )
+        }
+      }
+    }
+
+    return createApiResponse(response)
+  } catch (error) {
+    console.error('GET /api/hubspot/analytics error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to fetch analytics', 500)
+  }
+}
+
+/**
+ * POST /api/hubspot/analytics/compare
+ * Compare performance between multiple workflows
+ */
+export async function POST(request: NextRequest) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 20, windowMs: 60000 })
+
+    // Authenticate request (admin access required)
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+    
+    await requireAdminAccess(user)
+
+    // Validate request body
+    const body = await request.json()
+    const { workflowIds, startDate, endDate, metrics } = WorkflowComparisonSchema.parse(body)
+
+    // Set default date range
+    const endDateTime = endDate ? new Date(endDate) : new Date()
+    const startDateTime = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+
+    // Get comparison data
+    const comparison = await workflowRepository.getWorkflowPerformanceComparison(
+      workflowIds,
+      startDateTime,
+      endDateTime
+    )
+
+    // Filter metrics if specified
+    const requestedMetrics = metrics || [
+      'enrollments',
+      'completions',
+      'conversion_rate',
+      'avg_completion_time',
+      'success_rate'
+    ]
+
+    const comparisonData = comparison.map(item => {
+      const data: any = {
+        workflowId: item.workflowId,
+        workflowName: item.workflowName
+      }
+
+      if (requestedMetrics.includes('enrollments')) {
+        data.totalEnrollments = item.metrics.totalEnrollments
+      }
+      if (requestedMetrics.includes('completions')) {
+        data.completedEnrollments = item.metrics.completedEnrollments
+      }
+      if (requestedMetrics.includes('conversion_rate')) {
+        data.conversionRate = item.metrics.conversionRate
+      }
+      if (requestedMetrics.includes('avg_completion_time')) {
+        data.averageCompletionTime = item.metrics.averageCompletionTime
+      }
+      if (requestedMetrics.includes('success_rate')) {
+        data.successRate = item.metrics.successRate
+      }
+
+      return data
+    })
+
+    // Calculate rankings
+    const rankings = {
+      topByEnrollments: [...comparisonData].sort((a, b) => 
+        (b.totalEnrollments || 0) - (a.totalEnrollments || 0)
+      ).slice(0, 3),
+      topByConversion: [...comparisonData].sort((a, b) => 
+        (b.conversionRate || 0) - (a.conversionRate || 0)
+      ).slice(0, 3),
+      fastestCompletion: [...comparisonData].sort((a, b) => 
+        (a.averageCompletionTime || Infinity) - (b.averageCompletionTime || Infinity)
+      ).slice(0, 3)
+    }
+
+    return createApiResponse({
+      dateRange: {
+        startDate: startDateTime.toISOString(),
+        endDate: endDateTime.toISOString()
+      },
+      comparison: comparisonData,
+      rankings,
+      summary: {
+        totalWorkflows: comparisonData.length,
+        averageConversionRate: comparisonData.reduce((sum, item) => 
+          sum + (item.conversionRate || 0), 0
+        ) / comparisonData.length,
+        totalEnrollments: comparisonData.reduce((sum, item) => 
+          sum + (item.totalEnrollments || 0), 0
+        )
+      }
+    })
+  } catch (error) {
+    console.error('POST /api/hubspot/analytics/compare error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to compare workflows', 500)
+  }
+}
+
+// Helper functions
+
+async function getWorkflowAnalytics(
+  startDate: Date,
+  endDate: Date,
+  workflowIds?: string[]
+) {
+  return await workflowRepository.getWorkflowAnalytics(startDate, endDate)
+}
+
+async function getMemberEngagementTrends(
+  startDate: Date,
+  endDate: Date,
+  interval: 'daily' | 'weekly' | 'monthly'
+) {
+  return await analyticsRepository.getEngagementTrends(startDate, endDate, interval)
+}
+
+async function getMemberEngagementSummary() {
+  const summary = await analyticsRepository.getRiskAnalysisReport()
+  return {
+    totalMembers: summary.totalMembers,
+    atRiskMembers: summary.atRiskMembers,
+    averageChurnScore: summary.averageChurnScore,
+    riskDistribution: {
+      low: summary.lowRiskMembers,
+      medium: summary.mediumRiskMembers,
+      high: summary.highRiskMembers,
+      critical: summary.atRiskMembers
+    }
+  }
+}
+
+async function getSyncHealthMetrics(startDate: Date, endDate: Date) {
+  try {
+    // Get sync record statistics
+    const [
+      totalSyncRecords,
+      successfulSyncs,
+      failedSyncs,
+      pendingSyncs
+    ] = await Promise.all([
+      prisma.hubSpotSyncRecord.count({
+        where: {
+          lastSyncAttempt: {
+            gte: startDate,
+            lte: endDate
+          }
+        }
+      }),
+      prisma.hubSpotSyncRecord.count({
+        where: {
+          syncStatus: 'SUCCESS',
+          lastSuccessfulSync: {
+            gte: startDate,
+            lte: endDate
+          }
+        }
+      }),
+      prisma.hubSpotSyncRecord.count({
+        where: {
+          syncStatus: 'FAILED',
+          lastSyncAttempt: {
+            gte: startDate,
+            lte: endDate
+          }
+        }
+      }),
+      prisma.hubSpotSyncRecord.count({
+        where: {
+          syncStatus: 'PENDING'
+        }
+      })
+    ])
+
+    const successRate = totalSyncRecords > 0 ? 
+      (successfulSyncs / totalSyncRecords * 100) : 100
+
+    return {
+      totalSyncAttempts: totalSyncRecords,
+      successfulSyncs,
+      failedSyncs,
+      pendingSyncs,
+      successRate: Number(successRate.toFixed(2)),
+      healthStatus: successRate >= 95 ? 'excellent' : 
+                   successRate >= 85 ? 'good' : 
+                   successRate >= 70 ? 'fair' : 'poor'
+    }
+  } catch (error) {
+    console.error('Failed to get sync health metrics:', error)
+    return {
+      totalSyncAttempts: 0,
+      successfulSyncs: 0,
+      failedSyncs: 0,
+      pendingSyncs: 0,
+      successRate: 0,
+      healthStatus: 'unknown'
+    }
+  }
+}
+
+async function getBusinessImpactMetrics(startDate: Date, endDate: Date) {
+  try {
+    // Get member analytics for business impact
+    const memberAnalytics = await prisma.memberAnalytics.aggregate({
+      where: {
+        lastCalculatedAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      _sum: {
+        totalSavings: true,
+        savings30d: true,
+        membershipValue: true
+      },
+      _avg: {
+        engagementScore: true,
+        renewalProbability: true
+      },
+      _count: {
+        id: true
+      }
+    })
+
+    // Calculate workflow-driven improvements
+    const workflowDrivenSavings = await prisma.memberAnalytics.aggregate({
+      where: {
+        activeWorkflows: {
+          isEmpty: false
+        },
+        lastCalculatedAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      _sum: {
+        savings30d: true
+      }
+    })
+
+    return {
+      totalMemberSavings: memberAnalytics._sum.totalSavings || 0,
+      recentSavings: memberAnalytics._sum.savings30d || 0,
+      workflowDrivenSavings: workflowDrivenSavings._sum.savings30d || 0,
+      totalMembershipValue: memberAnalytics._sum.membershipValue || 0,
+      averageEngagement: memberAnalytics._avg.engagementScore || 0,
+      averageRenewalProbability: memberAnalytics._avg.renewalProbability || 0,
+      membersAnalyzed: memberAnalytics._count.id || 0,
+      roi: calculateROI(
+        memberAnalytics._sum.totalSavings || 0,
+        memberAnalytics._sum.membershipValue || 0
+      )
+    }
+  } catch (error) {
+    console.error('Failed to get business impact metrics:', error)
+    return {
+      totalMemberSavings: 0,
+      recentSavings: 0,
+      workflowDrivenSavings: 0,
+      totalMembershipValue: 0,
+      averageEngagement: 0,
+      averageRenewalProbability: 0,
+      membersAnalyzed: 0,
+      roi: 0
+    }
+  }
+}
+
+function calculatePercentageChange(oldValue: number, newValue: number): number {
+  if (oldValue === 0) return newValue > 0 ? 100 : 0
+  return Number(((newValue - oldValue) / oldValue * 100).toFixed(2))
+}
+
+function calculateROI(totalSavings: number, membershipValue: number): number {
+  if (membershipValue === 0) return 0
+  return Number((totalSavings / membershipValue * 100).toFixed(2))
+}

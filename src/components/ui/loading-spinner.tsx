@@ -1,22 +1,24 @@
+'use client'
+
 import { cn } from '@/lib/utils'
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
-  color?: 'primary' | 'secondary' | 'muted'  
+  color?: 'primary' | 'white' | 'gray'
 }
 
-const sizeClasses = {
+const spinnerSizes = {
   sm: 'h-4 w-4',
   md: 'h-6 w-6', 
   lg: 'h-8 w-8',
-  xl: 'h-12 w-12'
+  xl: 'h-10 w-10'
 }
 
-const colorClasses = {
-  primary: 'text-namc-blue-600',
-  secondary: 'text-gray-600',
-  muted: 'text-muted-foreground'
+const spinnerColors = {
+  primary: 'border-blue-600',
+  white: 'border-white',
+  gray: 'border-gray-600'
 }
 
 export function LoadingSpinner({ 
@@ -25,11 +27,11 @@ export function LoadingSpinner({
   color = 'primary'
 }: LoadingSpinnerProps) {
   return (
-    <div 
+    <div
       className={cn(
-        'animate-spin rounded-full border-2 border-current border-t-transparent',
-        sizeClasses[size],
-        colorClasses[color],
+        'animate-spin rounded-full border-2 border-t-transparent',
+        spinnerSizes[size],
+        spinnerColors[color],
         className
       )}
       role="status"
@@ -40,24 +42,24 @@ export function LoadingSpinner({
   )
 }
 
-// Inline spinner for buttons
+// Inline loading spinner for buttons
 export function InlineSpinner({ className }: { className?: string }) {
   return (
     <LoadingSpinner 
       size="sm" 
-      className={cn('mr-2', className)}
+      color="white"
+      className={cn('mr-2', className)} 
     />
   )
 }
 
-// Full page loading component
-export function PageLoader({ message = 'Loading...' }: { message?: string }) {
+// Full page loading spinner
+export function PageSpinner() {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <LoadingSpinner size="xl" />
-        <p className="text-lg font-medium text-foreground">{message}</p>
-        <p className="text-sm text-muted-foreground">Please wait while we load your content</p>
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="text-center">
+        <LoadingSpinner size="lg" />
+        <p className="mt-4 text-gray-600">Loading...</p>
       </div>
     </div>
   )

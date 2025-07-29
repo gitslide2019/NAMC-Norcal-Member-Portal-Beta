@@ -1,0 +1,371 @@
+/**
+ * HubSpot Workflow Status Webhook Handler
+ * 
+ * Handles workflow enrollment, completion, and status change notifications from HubSpot.
+ * Updates NAMC Portal with workflow progress and triggers appropriate follow-up actions.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { hubspotIntegrationBridge } from '@/features/tech-clean-california/services/hubspot-integration-bridge';
+import { environmentManager } from '@/features/tech-clean-california/config/environments';
+
+interface WorkflowStatusPayload {
+  subscriptionId: number;
+  portalId: number;
+  appId: number;
+  eventId: string;
+  subscriptionType: string;
+  attemptNumber: number;
+  objectId: number;
+  changeSource: string;
+  eventType: string;
+  workflowId: number;
+  workflowName: string;
+  enrollmentId: number;
+  enrollmentStatus: 'ENROLLED' | 'COMPLETED' | 'FAILED' | 'UNENROLLED';
+  stepId?: number;
+  stepName?: string;
+  stepStatus?: 'COMPLETED' | 'FAILED' | 'SKIPPED';
+  occurredAt: number;
+}
+
+/**
+ * Map HubSpot workflow names to TECH workflow types
+ */
+const WORKFLOW_TYPE_MAP: Record<string, string> = {
+  'TECH Contractor Enrollment - PRODUCTION': 'contractor.enrollment',
+  'TECH Contractor Enrollment - STAGING': 'contractor.enrollment',
+  'TECH Contractor Enrollment - DEVELOPMENT': 'contractor.enrollment',
+  'TECH Contractor Recertification - PRODUCTION': 'contractor.recertification',
+  'TECH Contractor Recertification - STAGING': 'contractor.recertification',
+  'TECH Contractor Recertification - DEVELOPMENT': 'contractor.recertification',
+  'TECH Project Initiation - PRODUCTION': 'project.initiation',
+  'TECH Project Initiation - STAGING': 'project.initiation',
+  'TECH Project Initiation - DEVELOPMENT': 'project.initiation',
+  'TECH Quality Documentation - PRODUCTION': 'quality.documentation',
+  'TECH Quality Documentation - STAGING': 'quality.documentation',
+  'TECH Quality Documentation - DEVELOPMENT': 'quality.documentation',
+  'TECH Incentive Processing - PRODUCTION': 'incentive.processing',
+  'TECH Incentive Processing - STAGING': 'incentive.processing',
+  'TECH Incentive Processing - DEVELOPMENT': 'incentive.processing'
+};
+
+/**
+ * Handle HubSpot workflow status webhook
+ */
+export async function POST(request: NextRequest) {
+  try {
+    console.log('📋 Received workflow status webhook');
+    
+    const payload: WorkflowStatusPayload = await request.json();
+    
+    console.log('📊 Workflow status details:', {
+      workflowName: payload.workflowName,
+      objectId: payload.objectId,
+      enrollmentStatus: payload.enrollmentStatus,
+      stepName: payload.stepName,
+      stepStatus: payload.stepStatus
+    });
+    
+    // Verify this is a TECH workflow
+    const workflowType = WORKFLOW_TYPE_MAP[payload.workflowName];
+    if (!workflowType) {
+      console.log('ℹ️ Non-TECH workflow, ignoring');
+      return NextResponse.json({ success: true, message: 'Non-TECH workflow ignored' });
+    }
+    
+    // Process workflow status change
+    const result = await processWorkflowStatusChange(payload, workflowType);
+    
+    if (result.success) {
+      console.log('✅ Workflow status processed successfully');
+      return NextResponse.json({
+        success: true,
+        message: result.message,
+        workflowType,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.error('❌ Workflow status processing failed:', result.error);
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: 500 }
+      );
+    }
+    
+  } catch (error) {
+    console.error('💥 Workflow status webhook error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Process workflow status changes and trigger appropriate actions
+ */
+async function processWorkflowStatusChange(
+  payload: WorkflowStatusPayload,
+  workflowType: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  
+  try {
+    const eventType = `${workflowType}.${payload.enrollmentStatus.toLowerCase()}`;
+    
+    // Handle workflow enrollment
+    if (payload.enrollmentStatus === 'ENROLLED') {
+      await handleWorkflowEnrollment(payload, workflowType);
+    }
+    
+    // Handle workflow completion
+    else if (payload.enrollmentStatus === 'COMPLETED') {
+      await handleWorkflowCompletion(payload, workflowType);
+    }
+    
+    // Handle workflow failure
+    else if (payload.enrollmentStatus === 'FAILED') {
+      await handleWorkflowFailure(payload, workflowType);
+    }
+    
+    // Handle step completion
+    if (payload.stepStatus === 'COMPLETED' && payload.stepName) {
+      await handleStepCompletion(payload, workflowType);
+    }
+    
+    // Send webhook to integration bridge
+    await hubspotIntegrationBridge.handleWebhook({
+      eventType,
+      objectType: getObjectTypeFromWorkflow(workflowType),
+      objectId: payload.objectId.toString(),
+      timestamp: new Date(payload.occurredAt),
+      portalId: payload.portalId.toString()
+    });
+    
+    return {
+      success: true,
+      message: `Workflow ${payload.enrollmentStatus.toLowerCase()} processed for ${workflowType}`
+    };
+    
+  } catch (error) {
+    return {
+      success: false,
+      error: `Failed to process workflow status: ${error.message}`
+    };
+  }
+}
+
+/**
+ * Handle workflow enrollment
+ */
+async function handleWorkflowEnrollment(payload: WorkflowStatusPayload, workflowType: string): Promise<void> {
+  console.log(`📝 Object ${payload.objectId} enrolled in ${workflowType} workflow`);
+  
+  // Update NAMC Portal with enrollment status
+  await updateNamcPortalWorkflowStatus(payload.objectId, workflowType, 'enrolled', {
+    workflowId: payload.workflowId,
+    enrollmentId: payload.enrollmentId,
+    enrolledAt: new Date(payload.occurredAt)
+  });
+  
+  // Send notification to relevant stakeholders
+  await sendWorkflowNotification(payload, workflowType, 'enrolled');
+}
+
+/**
+ * Handle workflow completion
+ */
+async function handleWorkflowCompletion(payload: WorkflowStatusPayload, workflowType: string): Promise<void> {
+  console.log(`✅ Object ${payload.objectId} completed ${workflowType} workflow`);
+  
+  // Update NAMC Portal with completion status
+  await updateNamcPortalWorkflowStatus(payload.objectId, workflowType, 'completed', {
+    workflowId: payload.workflowId,
+    enrollmentId: payload.enrollmentId,
+    completedAt: new Date(payload.occurredAt)
+  });
+  
+  // Trigger post-completion actions
+  await triggerPostCompletionActions(payload, workflowType);
+  
+  // Send notification
+  await sendWorkflowNotification(payload, workflowType, 'completed');
+}
+
+/**
+ * Handle workflow failure
+ */
+async function handleWorkflowFailure(payload: WorkflowStatusPayload, workflowType: string): Promise<void> {
+  console.error(`❌ Object ${payload.objectId} failed in ${workflowType} workflow`);
+  
+  // Update NAMC Portal with failure status
+  await updateNamcPortalWorkflowStatus(payload.objectId, workflowType, 'failed', {
+    workflowId: payload.workflowId,
+    enrollmentId: payload.enrollmentId,
+    failedAt: new Date(payload.occurredAt),
+    error: 'Workflow execution failed'
+  });
+  
+  // Send alert notification
+  await sendWorkflowAlert(payload, workflowType, 'Workflow execution failed');
+}
+
+/**
+ * Handle step completion
+ */
+async function handleStepCompletion(payload: WorkflowStatusPayload, workflowType: string): Promise<void> {
+  console.log(`📋 Step '${payload.stepName}' completed for object ${payload.objectId} in ${workflowType}`);
+  
+  // Log step completion for auditing
+  await logWorkflowStepCompletion(payload, workflowType);
+  
+  // Check if step requires special handling
+  await handleSpecialStepActions(payload, workflowType);
+}
+
+/**
+ * Trigger actions after workflow completion
+ */
+async function triggerPostCompletionActions(payload: WorkflowStatusPayload, workflowType: string): Promise<void> {
+  switch (workflowType) {
+    case 'contractor.enrollment':
+      // Grant contractor access to TECH portal features
+      await grantContractorAccess(payload.objectId);
+      break;
+      
+    case 'project.initiation':
+      // Set up project tracking and monitoring
+      await initializeProjectTracking(payload.objectId);
+      break;
+      
+    case 'quality.documentation':
+      // Submit incentive application to utility
+      await submitIncentiveApplication(payload.objectId);
+      break;
+      
+    case 'incentive.processing':
+      // Mark project as complete and generate reports
+      await finalizeProject(payload.objectId);
+      break;
+  }
+}
+
+/**
+ * Handle special actions for specific workflow steps
+ */
+async function handleSpecialStepActions(payload: WorkflowStatusPayload, workflowType: string): Promise<void> {
+  const stepName = payload.stepName?.toLowerCase() || '';
+  
+  // Training completion step
+  if (stepName.includes('training') && stepName.includes('complete')) {
+    await updateContractorCertificationStatus(payload.objectId, 'training_completed');
+  }
+  
+  // Document verification step
+  if (stepName.includes('document') && stepName.includes('verified')) {
+    await processDocumentVerification(payload.objectId);
+  }
+  
+  // Agreement signature step
+  if (stepName.includes('agreement') && stepName.includes('signed')) {
+    await processAgreementSigning(payload.objectId);
+  }
+  
+  // Quality review step
+  if (stepName.includes('quality') && stepName.includes('approved')) {
+    await processQualityApproval(payload.objectId);
+  }
+}
+
+/**
+ * Utility functions for data operations
+ */
+function getObjectTypeFromWorkflow(workflowType: string): string {
+  const objectTypeMap: Record<string, string> = {
+    'contractor.enrollment': 'tech_contractor',
+    'contractor.recertification': 'tech_contractor',
+    'project.initiation': 'tech_project',
+    'quality.documentation': 'tech_project',
+    'incentive.processing': 'tech_project'
+  };
+  
+  return objectTypeMap[workflowType] || 'unknown';
+}
+
+/**
+ * Placeholder implementations for NAMC Portal integration
+ * These would be implemented to integrate with actual NAMC Portal APIs
+ */
+
+async function updateNamcPortalWorkflowStatus(objectId: number, workflowType: string, status: string, details: any): Promise<void> {
+  // Implementation would update NAMC Portal database
+  console.log(`📝 Updating NAMC Portal: ${objectId} - ${workflowType} - ${status}`);
+}
+
+async function sendWorkflowNotification(payload: WorkflowStatusPayload, workflowType: string, status: string): Promise<void> {
+  // Implementation would send notifications via email/Slack
+  console.log(`📧 Sending notification: ${workflowType} - ${status}`);
+}
+
+async function sendWorkflowAlert(payload: WorkflowStatusPayload, workflowType: string, message: string): Promise<void> {
+  // Implementation would send alert notifications
+  console.log(`🚨 Sending alert: ${workflowType} - ${message}`);
+}
+
+async function logWorkflowStepCompletion(payload: WorkflowStatusPayload, workflowType: string): Promise<void> {
+  // Implementation would log to audit system
+  console.log(`📊 Logging step completion: ${payload.stepName}`);
+}
+
+async function grantContractorAccess(objectId: number): Promise<void> {
+  // Implementation would grant portal access
+  console.log(`🔓 Granting contractor access: ${objectId}`);
+}
+
+async function initializeProjectTracking(objectId: number): Promise<void> {
+  // Implementation would set up project tracking
+  console.log(`📋 Initializing project tracking: ${objectId}`);
+}
+
+async function submitIncentiveApplication(objectId: number): Promise<void> {
+  // Implementation would submit to utility
+  console.log(`💰 Submitting incentive application: ${objectId}`);
+}
+
+async function finalizeProject(objectId: number): Promise<void> {
+  // Implementation would finalize project
+  console.log(`🏁 Finalizing project: ${objectId}`);
+}
+
+async function updateContractorCertificationStatus(objectId: number, status: string): Promise<void> {
+  // Implementation would update certification
+  console.log(`🎓 Updating certification: ${objectId} - ${status}`);
+}
+
+async function processDocumentVerification(objectId: number): Promise<void> {
+  // Implementation would process document verification
+  console.log(`📄 Processing document verification: ${objectId}`);
+}
+
+async function processAgreementSigning(objectId: number): Promise<void> {
+  // Implementation would process agreement signing
+  console.log(`✍️ Processing agreement signing: ${objectId}`);
+}
+
+async function processQualityApproval(objectId: number): Promise<void> {
+  // Implementation would process quality approval
+  console.log(`✅ Processing quality approval: ${objectId}`);
+}
+
+/**
+ * Health check endpoint
+ */
+export async function GET(request: NextRequest) {
+  return NextResponse.json({
+    endpoint: 'workflow-status',
+    status: 'active',
+    supportedWorkflows: Object.keys(WORKFLOW_TYPE_MAP),
+    environment: environmentManager.getEnvironment(),
+    timestamp: new Date().toISOString()
+  });
+}

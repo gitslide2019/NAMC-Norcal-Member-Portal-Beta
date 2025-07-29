@@ -1,0 +1,409 @@
+name: Comprehensive Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '18'
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/namc_test'
+  JWT_SECRET: 'test-jwt-secret-for-ci'
+
+jobs:
+  # Unit and Integration Tests
+  unit-integration-tests:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: namc_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Generate Prisma client
+      run: npx prisma generate
+
+    - name: Run database migrations
+      run: npx prisma migrate deploy
+
+    - name: Seed test database
+      run: npx prisma db seed
+
+    - name: Run TypeScript type checking
+      run: npm run type-check
+
+    - name: Run linting
+      run: npm run lint
+
+    - name: Run unit tests
+      run: npm run test:unit -- --coverage --verbose
+
+    - name: Run integration tests
+      run: npm run test:integration -- --coverage
+
+    - name: Run component tests
+      run: npm run test:component -- --coverage
+
+    - name: Run store tests
+      run: npm run test:store -- --coverage
+
+    - name: Generate combined coverage report
+      run: npm run test:coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+
+    - name: Archive test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-unit-integration
+        path: |
+          coverage/
+          test-results/
+          jest-junit.xml
+
+  # E2E Tests
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: unit-integration-tests
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: namc_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+        shard: [1/4, 2/4, 3/4, 4/4]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps ${{ matrix.browser }}
+
+    - name: Generate Prisma client
+      run: npx prisma generate
+
+    - name: Run database migrations
+      run: npx prisma migrate deploy
+
+    - name: Build application
+      run: npm run build
+
+    - name: Start application server
+      run: |
+        npm run start &
+        npx wait-on http://localhost:3000 --timeout 60000
+      env:
+        NODE_ENV: test
+
+    - name: Run E2E tests
+      run: npx playwright test --project=${{ matrix.browser }} --shard=${{ matrix.shard }}
+      env:
+        CI: true
+
+    - name: Archive E2E test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-results-${{ matrix.browser }}-${{ strategy.job-index }}
+        path: |
+          test-results/
+          playwright-report/
+        retention-days: 7
+
+  # Performance Tests
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: unit-integration-tests
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: namc_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install chromium
+
+    - name: Generate Prisma client
+      run: npx prisma generate
+
+    - name: Run database migrations
+      run: npx prisma migrate deploy
+
+    - name: Build application
+      run: npm run build
+
+    - name: Start application server
+      run: |
+        npm run start &
+        npx wait-on http://localhost:3000 --timeout 60000
+      env:
+        NODE_ENV: test
+
+    - name: Run performance tests
+      run: npx playwright test --project=performance
+      env:
+        CI: true
+
+    - name: Archive performance results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-results
+        path: |
+          test-results/
+          performance-results.json
+
+  # Visual Regression Tests
+  visual-tests:
+    runs-on: ubuntu-latest
+    needs: unit-integration-tests
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: namc_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install chromium
+
+    - name: Generate Prisma client
+      run: npx prisma generate
+
+    - name: Run database migrations
+      run: npx prisma migrate deploy
+
+    - name: Build application
+      run: npm run build
+
+    - name: Start application server
+      run: |
+        npm run start &
+        npx wait-on http://localhost:3000 --timeout 60000
+      env:
+        NODE_ENV: test
+
+    - name: Run visual regression tests
+      run: npx playwright test --project=visual
+      env:
+        CI: true
+
+    - name: Archive visual test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: visual-test-results
+        path: |
+          test-results/
+          test-results-visual/
+
+  # Security and Code Quality
+  security-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run security audit
+      run: npm audit --audit-level=moderate
+
+    - name: Run dependency vulnerability check
+      run: npx audit-ci --moderate
+
+    - name: Run code quality analysis
+      run: npm run lint:report
+      continue-on-error: true
+
+    - name: Run TypeScript strict checks
+      run: npx tsc --strict --noEmit
+
+    - name: Archive security results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-quality-results
+        path: |
+          lint-results.json
+          security-audit.json
+
+  # Test Summary and Reporting
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: [unit-integration-tests, e2e-tests, performance-tests, visual-tests, security-quality]
+    if: always()
+    
+    steps:
+    - name: Download all test artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Generate test summary
+      run: |
+        echo "# Test Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -d "test-results-unit-integration" ]; then
+          echo "✅ Unit & Integration Tests: Completed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Unit & Integration Tests: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -d "e2e-results-chromium-0" ]; then
+          echo "✅ E2E Tests: Completed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ E2E Tests: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -d "performance-results" ]; then
+          echo "✅ Performance Tests: Completed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Performance Tests: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -d "visual-test-results" ]; then
+          echo "✅ Visual Tests: Completed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Visual Tests: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -d "security-quality-results" ]; then
+          echo "✅ Security & Quality: Completed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Security & Quality: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Upload combined test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: all-test-results
+        path: .
+        retention-days: 30

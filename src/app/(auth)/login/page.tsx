@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { DynamicIcon, usePreloadIcons, AUTH_ICONS } from '@/components/ui/dynamic-icon'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/auth/unified-auth'
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -68,10 +68,10 @@ export default function LoginPage() {
       }
 
       // Store token and user data
-      await login(result.token, result.user)
+      await login(result.data.token, result.data.user)
 
       // Redirect based on user type
-      if (result.user.memberType === 'admin') {
+      if (result.data.user.memberType === 'admin') {
         router.push('/admin/dashboard')
       } else {
         router.push('/dashboard')
@@ -103,7 +103,7 @@ export default function LoginPage() {
       <CardContent className="space-y-6">
         {error && (
           <Alert variant="destructive" role="alert" aria-live="assertive">
-            <DynamicIcon name="AlertCircle" className="h-4 w-4" size={16} aria-hidden="true" />
+            <DynamicIcon name="AlertCircle" className="h-4 w-4" size={16} aria-hidden={true} />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -153,9 +153,9 @@ export default function LoginPage() {
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? (
-                  <DynamicIcon name="EyeOff" className="h-4 w-4 text-namc-gray-400" size={16} aria-hidden="true" />
+                  <DynamicIcon name="EyeOff" className="h-4 w-4 text-namc-gray-400" size={16} aria-hidden={true} />
                 ) : (
-                  <DynamicIcon name="Eye" className="h-4 w-4 text-namc-gray-400" size={16} aria-hidden="true" />
+                  <DynamicIcon name="Eye" className="h-4 w-4 text-namc-gray-400" size={16} aria-hidden={true} />
                 )}
               </Button>
             </div>

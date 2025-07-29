@@ -71,7 +71,10 @@ export async function POST(request: NextRequest) {
         }
       },
       'Email verified successfully! You can now access all features.',
-      { requestId }
+      { 
+        timestamp: new Date().toISOString(),
+        requestId 
+      }
     )
 
   } catch (error) {

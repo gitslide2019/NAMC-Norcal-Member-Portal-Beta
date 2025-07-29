@@ -1,0 +1,681 @@
+#!/usr/bin/env tsx
+
+/**
+ * HubSpot Workflow Database Seeder
+ * 
+ * This script seeds the database with initial HubSpot workflow configurations
+ * and automation rules for NAMC member portal integration.
+ */
+
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+async function seedHubSpotWorkflows() {
+  console.log('🌱 Seeding HubSpot workflows and automation rules...')
+
+  try {
+    // Create HubSpot Integration Config
+    const integrationConfig = await prisma.hubSpotIntegrationConfig.upsert({
+      where: { id: 'default-config' },
+      update: {},
+      create: {
+        id: 'default-config',
+        portalId: process.env.HUBSPOT_PORTAL_ID || '12345678',
+        apiKeyEncrypted: 'ENCRYPTED_API_KEY_PLACEHOLDER',
+        syncEnabled: true,
+        autoSyncInterval: 3600, // 1 hour
+        syncSettings: {
+          memberSyncEnabled: true,
+          projectSyncEnabled: true,
+          workflowSyncEnabled: true,
+          batchSize: 50,
+          retryAttempts: 3
+        },
+        rateLimitSettings: {
+          requestsPerSecond: 10,
+          burstLimit: 100,
+          dailyLimit: 40000
+        },
+        errorThreshold: 10,
+        retrySettings: {
+          maxRetries: 3,
+          backoffMultiplier: 2,
+          initialDelay: 1000
+        },
+        isActive: true
+      }
+    })
+
+    console.log('✅ Created HubSpot integration config')
+
+    // Define NAMC workflow templates
+    const workflowTemplates = [
+      {
+        id: 'namc-member-onboarding',
+        name: 'NAMC Member Onboarding',
+        description: 'Automated onboarding workflow for new NAMC members including welcome sequence, document collection, and initial engagement tracking',
+        type: 'member_onboarding' as const,
+        status: 'DRAFT' as const,
+        enrollmentCriteria: {
+          propertyFilters: [
+            {
+              propertyName: 'member_type',
+              operator: 'EQ',
+              value: 'REGULAR',
+              propertyType: 'enumeration'
+            },
+            {
+              propertyName: 'onboarding_status',
+              operator: 'NEQ',
+              value: 'completed',
+              propertyType: 'enumeration'
+            }
+          ],
+          listMemberships: [],
+          customCriteria: {
+            excludeExistingMembers: true,
+            requireEmailVerification: true
+          }
+        },
+        workflowDefinition: {
+          steps: [
+            {
+              id: 'welcome-email',
+              stepNumber: 1,
+              stepType: 'EMAIL',
+              name: 'Send Welcome Email',
+              description: 'Send personalized welcome email with onboarding checklist',
+              delay: { type: 'FIXED', value: 30, unit: 'MINUTES' },
+              action: {
+                type: 'SEND_EMAIL',
+                emailTemplate: 'namc_welcome_template',
+                personalizationTokens: ['first_name', 'company', 'member_type']
+              }
+            },
+            {
+              id: 'schedule-welcome-call',
+              stepNumber: 2,
+              stepType: 'TASK',
+              name: 'Schedule Welcome Call',
+              description: 'Create task for staff to schedule welcome call',
+              action: {
+                type: 'CREATE_TASK',
+                taskType: 'CALL',
+                subject: 'Welcome call for new member',
+                priority: 'MEDIUM',
+                dueDate: { type: 'DELAY', value: 3, unit: 'DAYS' }
+              }
+            },
+            {
+              id: 'onboarding-progress-check',
+              stepNumber: 3,
+              stepType: 'CONDITION',
+              name: 'Check Onboarding Progress',
+              description: 'Evaluate member onboarding completion after 7 days',
+              delay: { type: 'FIXED', value: 7, unit: 'DAYS' },
+              conditions: [
+                {
+                  propertyName: 'onboarding_status',
+                  operator: 'EQ',
+                  value: 'completed'
+                }
+              ],
+              branches: [
+                {
+                  name: 'Onboarding Complete',
+                  conditions: [{ propertyName: 'onboarding_status', operator: 'EQ', value: 'completed' }],
+                  nextAction: 'send-completion-email'
+                },
+                {
+                  name: 'Onboarding Incomplete',
+                  conditions: [],
+                  nextAction: 'send-reminder-email',
+                  isDefault: true
+                }
+              ]
+            }
+          ],
+          goalCriteria: {
+            propertyName: 'onboarding_status',
+            operator: 'EQ',
+            value: 'completed'
+          }
+        },
+        executionTimeout: 30000,
+        retryAttempts: 3,
+        batchSize: 50
+      },
+
+      {
+        id: 'namc-member-lifecycle',
+        name: 'NAMC Member Lifecycle Management',
+        description: 'Continuous monitoring of member engagement, risk assessment, and automated interventions for member retention',
+        type: 'member_lifecycle' as const,
+        status: 'DRAFT' as const,
+        enrollmentCriteria: {
+          propertyFilters: [
+            {
+              propertyName: 'member_type',
+              operator: 'IN',
+              values: ['REGULAR', 'admin'],
+              propertyType: 'enumeration'
+            },
+            {
+              propertyName: 'is_active',
+              operator: 'EQ',
+              value: true,
+              propertyType: 'bool'
+            }
+          ],
+          customCriteria: {
+            reenrollmentEnabled: true,
+            checkFrequency: 'weekly'
+          }
+        },
+        workflowDefinition: {
+          steps: [
+            {
+              id: 'calculate-engagement-score',
+              stepNumber: 1,
+              stepType: 'PROPERTY_UPDATE',
+              name: 'Calculate Engagement Score',
+              description: 'Calculate member engagement score based on activity metrics',
+              action: {
+                type: 'NAMC_CUSTOM_ACTION',
+                actionType: 'CALCULATE_ENGAGEMENT_SCORE',
+                parameters: {
+                  includeLoginFrequency: true,
+                  includeEventParticipation: true,
+                  includeProjectActivity: true,
+                  includeCommunicationMetrics: true
+                }
+              }
+            },
+            {
+              id: 'assess-risk-level',
+              stepNumber: 2,
+              stepType: 'CONDITION',
+              name: 'Assess Member Risk Level',
+              description: 'Determine risk level based on engagement score and activity patterns',
+              conditions: [
+                {
+                  propertyName: 'engagement_score',
+                  operator: 'LT',
+                  value: 25
+                }
+              ],
+              branches: [
+                {
+                  name: 'At Risk - Immediate Intervention',
+                  conditions: [{ propertyName: 'engagement_score', operator: 'LT', value: 25 }],
+                  nextAction: 'urgent-intervention'
+                },
+                {
+                  name: 'Medium Risk - Standard Monitoring',
+                  conditions: [
+                    { propertyName: 'engagement_score', operator: 'GTE', value: 25 },
+                    { propertyName: 'engagement_score', operator: 'LT', value: 50 }
+                  ],
+                  nextAction: 'standard-engagement'
+                },
+                {
+                  name: 'Healthy - Continue Monitoring',
+                  conditions: [{ propertyName: 'engagement_score', operator: 'GTE', value: 50 }],
+                  nextAction: 'continue-monitoring'
+                }
+              ]
+            },
+            {
+              id: 'urgent-intervention',
+              stepNumber: 3,
+              stepType: 'EMAIL',
+              name: 'Urgent Member Intervention',
+              description: 'Send personalized re-engagement email for at-risk members',
+              action: {
+                type: 'SEND_EMAIL',
+                emailTemplate: 'namc_reengagement_template',
+                priority: 'HIGH'
+              }
+            }
+          ]
+        },
+        executionTimeout: 45000,
+        retryAttempts: 3,
+        batchSize: 25
+      },
+
+      {
+        id: 'namc-project-matching',
+        name: 'NAMC Project Matching Engine',
+        description: 'Automated project opportunity matching based on member skills, location, and preferences',
+        type: 'project_matching' as const,
+        status: 'DRAFT' as const,
+        enrollmentCriteria: {
+          propertyFilters: [
+            {
+              propertyName: 'project_status',
+              operator: 'EQ',
+              value: 'PUBLISHED',
+              propertyType: 'enumeration'
+            },
+            {
+              propertyName: 'bidding_open',
+              operator: 'EQ',
+              value: true,
+              propertyType: 'bool'
+            }
+          ]
+        },
+        workflowDefinition: {
+          steps: [
+            {
+              id: 'analyze-project-requirements',
+              stepNumber: 1,
+              stepType: 'PROPERTY_UPDATE',
+              name: 'Analyze Project Requirements',
+              description: 'Extract and categorize project requirements for matching',
+              action: {
+                type: 'NAMC_CUSTOM_ACTION',
+                actionType: 'ANALYZE_PROJECT_REQUIREMENTS',
+                parameters: {
+                  extractSkills: true,
+                  analyzeLocation: true,
+                  assessComplexity: true
+                }
+              }
+            },
+            {
+              id: 'find-matching-members',
+              stepNumber: 2,
+              stepType: 'INTEGRATION_ACTION',
+              name: 'Find Matching Members',
+              description: 'Identify members with relevant skills and qualifications',
+              action: {
+                type: 'NAMC_CUSTOM_ACTION',
+                actionType: 'FIND_MATCHING_MEMBERS',
+                parameters: {
+                  skillMatchThreshold: 70,
+                  locationRadius: 50,
+                  minExperience: 1
+                }
+              }
+            },
+            {
+              id: 'send-opportunity-notifications',
+              stepNumber: 3,
+              stepType: 'EMAIL',
+              name: 'Send Opportunity Notifications',
+              description: 'Notify matched members about project opportunity',
+              action: {
+                type: 'SEND_EMAIL',
+                emailTemplate: 'namc_project_opportunity_template',
+                targetAudience: 'MATCHED_MEMBERS'
+              }
+            }
+          ]
+        },
+        executionTimeout: 60000,
+        retryAttempts: 2,
+        batchSize: 10
+      },
+
+      {
+        id: 'namc-renewal-management',
+        name: 'NAMC Membership Renewal Management',
+        description: 'Automated membership renewal reminders, payment processing, and retention campaigns',
+        type: 'renewal_management' as const,
+        status: 'DRAFT' as const,
+        enrollmentCriteria: {
+          propertyFilters: [
+            {
+              propertyName: 'membership_expires_at',
+              operator: 'LTE',
+              value: '90_DAYS_FROM_NOW',
+              propertyType: 'datetime'
+            },
+            {
+              propertyName: 'renewal_status',
+              operator: 'NEQ',
+              value: 'completed',
+              propertyType: 'enumeration'
+            }
+          ]
+        },
+        workflowDefinition: {
+          steps: [
+            {
+              id: 'initial-renewal-reminder',
+              stepNumber: 1,
+              stepType: 'EMAIL',
+              name: 'Initial Renewal Reminder',
+              description: 'Send initial renewal reminder 90 days before expiration',
+              delay: { type: 'FIXED', value: 0, unit: 'DAYS' },
+              action: {
+                type: 'SEND_EMAIL',
+                emailTemplate: 'namc_renewal_reminder_90d',
+                includeRenewalLink: true
+              }
+            },
+            {
+              id: 'follow-up-reminder',
+              stepNumber: 2,
+              stepType: 'EMAIL',
+              name: 'Follow-up Renewal Reminder',
+              description: 'Send follow-up reminder 30 days before expiration',
+              delay: { type: 'FIXED', value: 60, unit: 'DAYS' },
+              conditions: [
+                {
+                  propertyName: 'renewal_status',
+                  operator: 'NEQ',
+                  value: 'completed'
+                }
+              ],
+              action: {
+                type: 'SEND_EMAIL',
+                emailTemplate: 'namc_renewal_reminder_30d',
+                includeValueProposition: true
+              }
+            },
+            {
+              id: 'urgent-renewal-notice',
+              stepNumber: 3,
+              stepType: 'EMAIL',
+              name: 'Urgent Renewal Notice',
+              description: 'Send urgent renewal notice 7 days before expiration',
+              delay: { type: 'FIXED', value: 83, unit: 'DAYS' },
+              conditions: [
+                {
+                  propertyName: 'renewal_status',
+                  operator: 'NEQ',
+                  value: 'completed'
+                }
+              ],
+              action: {
+                type: 'SEND_EMAIL',
+                emailTemplate: 'namc_renewal_urgent',
+                priority: 'HIGH',
+                includePhoneCallReminder: true
+              }
+            }
+          ]
+        },
+        executionTimeout: 30000,
+        retryAttempts: 3,
+        batchSize: 20
+      },
+
+      {
+        id: 'namc-event-engagement',
+        name: 'NAMC Event Engagement Optimization',
+        description: 'Automated event promotion, registration reminders, and post-event follow-up campaigns',
+        type: 'event_engagement' as const,
+        status: 'DRAFT' as const,
+        enrollmentCriteria: {
+          propertyFilters: [
+            {
+              propertyName: 'event_status',
+              operator: 'EQ',
+              value: 'PUBLISHED',
+              propertyType: 'enumeration'
+            },
+            {
+              propertyName: 'registration_open',
+              operator: 'EQ',
+              value: true,
+              propertyType: 'bool'
+            }
+          ]
+        },
+        workflowDefinition: {
+          steps: [
+            {
+              id: 'event-announcement',
+              stepNumber: 1,
+              stepType: 'EMAIL',
+              name: 'Event Announcement',
+              description: 'Send event announcement to all eligible members',
+              action: {
+                type: 'SEND_EMAIL',
+                emailTemplate: 'namc_event_announcement',
+                targetAudience: 'ALL_ACTIVE_MEMBERS'
+              }
+            },
+            {
+              id: 'registration-reminder',
+              stepNumber: 2,
+              stepType: 'EMAIL',
+              name: 'Registration Reminder',
+              description: 'Send registration reminder to non-registered members',
+              delay: { type: 'FIXED', value: 7, unit: 'DAYS' },
+              conditions: [
+                {
+                  propertyName: 'event_registration_status',
+                  operator: 'NEQ',
+                  value: 'registered'
+                }
+              ],
+              action: {
+                type: 'SEND_EMAIL',
+                emailTemplate: 'namc_event_registration_reminder',
+                targetAudience: 'NON_REGISTERED_MEMBERS'
+              }
+            },
+            {
+              id: 'post-event-survey',
+              stepNumber: 3,
+              stepType: 'EMAIL',
+              name: 'Post-Event Survey',
+              description: 'Send post-event survey to attendees',
+              delay: { type: 'FIXED', value: 1, unit: 'DAYS' },
+              conditions: [
+                {
+                  propertyName: 'event_attendance_status',
+                  operator: 'EQ',
+                  value: 'attended'
+                }
+              ],
+              action: {
+                type: 'SEND_EMAIL',
+                emailTemplate: 'namc_event_feedback_survey',
+                targetAudience: 'EVENT_ATTENDEES'
+              }
+            }
+          ]
+        },
+        executionTimeout: 30000,
+        retryAttempts: 3,
+        batchSize: 100
+      }
+    ]
+
+    // Create workflow records
+    for (const template of workflowTemplates) {
+      const workflow = await prisma.hubSpotWorkflow.upsert({
+        where: { id: template.id },
+        update: {},
+        create: {
+          ...template,
+          enrollmentCriteria: template.enrollmentCriteria,
+          workflowDefinition: template.workflowDefinition
+        }
+      })
+      console.log(`✅ Created workflow: ${workflow.name}`)
+    }
+
+    // Create automation rules
+    const automationRules = [
+      {
+        id: 'member-engagement-monitoring',
+        name: 'Member Engagement Monitoring',
+        description: 'Automatically monitor member engagement and trigger interventions',
+        triggerType: 'TIME_BASED' as const,
+        triggerSchedule: '0 9 * * 1', // Every Monday at 9 AM
+        targetEntityType: 'CONTACT' as const,
+        targetFilters: {
+          memberType: ['REGULAR', 'admin'],
+          isActive: true
+        },
+        actions: [
+          {
+            type: 'CALCULATE_ENGAGEMENT_SCORE',
+            parameters: {
+              includeAllMetrics: true,
+              updateMemberAnalytics: true
+            }
+          },
+          {
+            type: 'ENROLL_IN_WORKFLOW',
+            workflowId: 'namc-member-lifecycle',
+            conditions: {
+              engagementScore: { operator: 'LT', value: 50 }
+            }
+          }
+        ],
+        executionLimit: 1000,
+        executionWindow: 3600, // 1 hour
+        cooldownPeriod: 604800 // 1 week
+      },
+
+      {
+        id: 'project-opportunity-matching',
+        name: 'Project Opportunity Matching',
+        description: 'Automatically match new projects with qualified members',
+        triggerType: 'PROPERTY_CHANGE' as const,
+        triggerConditions: {
+          propertyName: 'project_status',
+          newValue: 'PUBLISHED'
+        },
+        targetEntityType: 'DEAL' as const,
+        actions: [
+          {
+            type: 'ENROLL_IN_WORKFLOW',
+            workflowId: 'namc-project-matching',
+            delay: { value: 5, unit: 'MINUTES' }
+          }
+        ],
+        executionLimit: 50,
+        executionWindow: 3600,
+        cooldownPeriod: 0
+      },
+
+      {
+        id: 'renewal-trigger',
+        name: 'Membership Renewal Trigger',
+        description: 'Automatically enroll members in renewal workflow based on expiration date',
+        triggerType: 'TIME_BASED' as const,
+        triggerSchedule: '0 10 * * *', // Daily at 10 AM
+        targetEntityType: 'CONTACT' as const,
+        targetFilters: {
+          membershipExpirationWindow: '90_DAYS',
+          renewalStatus: { operator: 'NEQ', value: 'completed' }
+        },
+        actions: [
+          {
+            type: 'ENROLL_IN_WORKFLOW',
+            workflowId: 'namc-renewal-management'
+          }
+        ],
+        executionLimit: 200,
+        executionWindow: 3600,
+        cooldownPeriod: 86400 // 1 day
+      },
+
+      {
+        id: 'new-member-onboarding-trigger',
+        name: 'New Member Onboarding Trigger',
+        description: 'Automatically enroll new members in onboarding workflow',
+        triggerType: 'PROPERTY_CHANGE' as const,
+        triggerConditions: {
+          propertyName: 'member_type',
+          newValue: 'REGULAR'
+        },
+        targetEntityType: 'CONTACT' as const,
+        actions: [
+          {
+            type: 'ENROLL_IN_WORKFLOW',
+            workflowId: 'namc-member-onboarding',
+            delay: { value: 1, unit: 'HOURS' }
+          },
+          {
+            type: 'CREATE_MEMBER_ANALYTICS_RECORD',
+            parameters: {
+              initialEngagementScore: 50,
+              riskLevel: 'standard'
+            }
+          }
+        ],
+        executionLimit: 100,
+        executionWindow: 3600,
+        cooldownPeriod: 0
+      },
+
+      {
+        id: 'webhook-data-sync',
+        name: 'HubSpot Webhook Data Sync',
+        description: 'Process HubSpot webhook events and sync data changes',
+        triggerType: 'WEBHOOK' as const,
+        triggerConditions: {
+          source: 'hubspot',
+          eventTypes: ['contact.propertyChange', 'deal.propertyChange', 'workflow.enrolled']
+        },
+        targetEntityType: 'CONTACT' as const,
+        actions: [
+          {
+            type: 'SYNC_HUBSPOT_DATA',
+            parameters: {
+              bidirectional: true,
+              validateData: true,
+              updateAnalytics: true
+            }
+          }
+        ],
+        executionLimit: 1000,
+        executionWindow: 3600,
+        cooldownPeriod: 0
+      }
+    ]
+
+    // Create automation rule records
+    for (const rule of automationRules) {
+      const automationRule = await prisma.automationRule.upsert({
+        where: { id: rule.id },
+        update: {},
+        create: {
+          ...rule,
+          triggerConditions: rule.triggerConditions || {},
+          targetFilters: rule.targetFilters || {},
+          actions: rule.actions,
+          actionSettings: {}
+        }
+      })
+      console.log(`✅ Created automation rule: ${automationRule.name}`)
+    }
+
+    console.log('\n🎉 Successfully seeded HubSpot workflows and automation rules!')
+    console.log('\n📊 Summary:')
+    console.log(`  • ${workflowTemplates.length} workflow templates created`)
+    console.log(`  • ${automationRules.length} automation rules created`)
+    console.log(`  • 1 integration configuration created`)
+
+  } catch (error) {
+    console.error('❌ Error seeding HubSpot workflows:', error)
+    throw error
+  }
+}
+
+async function main() {
+  try {
+    await seedHubSpotWorkflows()
+  } catch (error) {
+    console.error('💥 Seeding failed:', error)
+    process.exit(1)
+  } finally {
+    await prisma.$disconnect()
+  }
+}
+
+// Run the seeder
+if (require.main === module) {
+  main()
+}

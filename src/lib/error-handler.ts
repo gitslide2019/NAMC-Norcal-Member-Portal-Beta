@@ -195,7 +195,7 @@ export function handleAPIError(
         )
       default:
         // Log Prisma error but don't expose details
-        Logger.database.error('Prisma operation failed', error as Error, {
+        Logger.database.error('Prisma operation failed', error as unknown as Error, {
           type: 'prisma_error',
           code: prismaError.code
         })

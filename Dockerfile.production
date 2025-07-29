@@ -1,0 +1,119 @@
+# Multi-stage production Dockerfile for NAMC NorCal Member Portal
+# Optimized for production deployment with security and performance
+
+# Stage 1: Dependencies
+FROM node:18-alpine AS dependencies
+WORKDIR /app
+
+# Install system dependencies for native modules
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    libc6-compat
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install dependencies
+RUN npm ci --only=production --frozen-lockfile && \
+    npm cache clean --force
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Stage 2: Build
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    libc6-compat
+
+# Copy package files
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Install all dependencies (including devDependencies)
+RUN npm ci --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build arguments
+ARG NODE_ENV=production
+ARG BUILD_TIME
+ARG GIT_SHA
+
+# Set environment variables for build
+ENV NODE_ENV=${NODE_ENV}
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV BUILD_TIME=${BUILD_TIME}
+ENV GIT_SHA=${GIT_SHA}
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the application
+RUN npm run build && \
+    npm prune --production
+
+# Stage 3: Production runtime
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 namc && \
+    adduser --system --uid 1001 namc
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    dumb-init \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Copy built application from builder stage
+COPY --from=builder --chown=namc:namc /app/public ./public
+COPY --from=builder --chown=namc:namc /app/.next/standalone ./
+COPY --from=builder --chown=namc:namc /app/.next/static ./.next/static
+
+# Copy Prisma files
+COPY --from=builder --chown=namc:namc /app/prisma ./prisma
+COPY --from=builder --chown=namc:namc /app/node_modules/.prisma ./node_modules/.prisma
+
+# Copy startup scripts
+COPY --chown=namc:namc scripts/docker/entrypoint.sh ./entrypoint.sh
+COPY --chown=namc:namc scripts/docker/healthcheck.sh ./healthcheck.sh
+
+# Make scripts executable
+RUN chmod +x ./entrypoint.sh ./healthcheck.sh
+
+# Create necessary directories
+RUN mkdir -p /app/uploads /app/logs && \
+    chown -R namc:namc /app/uploads /app/logs
+
+# Switch to non-root user
+USER namc
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD ./healthcheck.sh
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["./entrypoint.sh"]

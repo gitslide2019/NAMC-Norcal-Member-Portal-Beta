@@ -1,0 +1,683 @@
+{
+  "config": {
+    "configFile": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/playwright.config.ts",
+    "rootDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 4
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/e2e-results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results/e2e-junit.xml"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "Microsoft Edge",
+        "name": "Microsoft Edge",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "Google Chrome",
+        "name": "Google Chrome",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "api",
+        "name": "api",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.api\\.spec\\.ts/"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "visual",
+        "name": "visual",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.visual\\.spec\\.ts/"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "performance",
+        "name": "performance",
+        "testDir": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.perf\\.spec\\.ts/"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.54.1",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "member-features-basic.spec.ts",
+      "file": "member-features-basic.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "NAMC Member Features - Basic Navigation",
+          "file": "member-features-basic.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should login and access member directory",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 12718,
+                      "error": {
+                        "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('input[placeholder*=\"Search\"]') resolved to 2 elements:\n    1) <input type=\"text\" placeholder=\"Search projects, events, members...\" class=\"w-full pl-10 pr-4 py-2 border border-namc-gray-300 rounded-lg focus:ring-2 focus:ring-namc-blue-500 focus:border-namc-blue-500\"/> aka getByRole('textbox', { name: 'Search projects, events,' })\n    2) <input value=\"\" placeholder=\"Search members...\" class=\"flex rounded-lg border bg-background text-sm transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-namc-gray-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 border-namc-gray-300 focus-visible:border-namc-blue-500 focus-visible:ring-2 focus-visible:ring-namc-blue-100 h-11 px-4 py-2 w-full\"/> aka getByRole('textbox', { name: 'Search members...' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[placeholder*=\"Search\"]')\u001b[22m\n",
+                        "stack": "Error: expect.toBeVisible: Error: strict mode violation: locator('input[placeholder*=\"Search\"]') resolved to 2 elements:\n    1) <input type=\"text\" placeholder=\"Search projects, events, members...\" class=\"w-full pl-10 pr-4 py-2 border border-namc-gray-300 rounded-lg focus:ring-2 focus:ring-namc-blue-500 focus:border-namc-blue-500\"/> aka getByRole('textbox', { name: 'Search projects, events,' })\n    2) <input value=\"\" placeholder=\"Search members...\" class=\"flex rounded-lg border bg-background text-sm transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-namc-gray-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 border-namc-gray-300 focus-visible:border-namc-blue-500 focus-visible:ring-2 focus-visible:ring-namc-blue-100 h-11 px-4 py-2 w-full\"/> aka getByRole('textbox', { name: 'Search members...' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[placeholder*=\"Search\"]')\u001b[22m\n\n    at /Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts:28:31",
+                        "location": {
+                          "file": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts",
+                          "column": 31,
+                          "line": 28
+                        },
+                        "snippet": "  26 |     // Test search functionality\n  27 |     const searchInput = page.locator('input[placeholder*=\"Search\"]')\n> 28 |     await expect(searchInput).toBeVisible()\n     |                               ^\n  29 |     await searchInput.fill('Maria')\n  30 |     \n  31 |     // Check filter functionality"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts",
+                            "column": 31,
+                            "line": 28
+                          },
+                          "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('input[placeholder*=\"Search\"]') resolved to 2 elements:\n    1) <input type=\"text\" placeholder=\"Search projects, events, members...\" class=\"w-full pl-10 pr-4 py-2 border border-namc-gray-300 rounded-lg focus:ring-2 focus:ring-namc-blue-500 focus:border-namc-blue-500\"/> aka getByRole('textbox', { name: 'Search projects, events,' })\n    2) <input value=\"\" placeholder=\"Search members...\" class=\"flex rounded-lg border bg-background text-sm transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-namc-gray-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 border-namc-gray-300 focus-visible:border-namc-blue-500 focus-visible:ring-2 focus-visible:ring-namc-blue-100 h-11 px-4 py-2 w-full\"/> aka getByRole('textbox', { name: 'Search members...' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('input[placeholder*=\"Search\"]')\u001b[22m\n\n\n  26 |     // Test search functionality\n  27 |     const searchInput = page.locator('input[placeholder*=\"Search\"]')\n> 28 |     await expect(searchInput).toBeVisible()\n     |                               ^\n  29 |     await searchInput.fill('Maria')\n  30 |     \n  31 |     // Check filter functionality\n    at /Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts:28:31"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T05:50:21.263Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results/member-features-basic-NAMC-5dfb5-and-access-member-directory-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results/member-features-basic-NAMC-5dfb5-and-access-member-directory-chromium/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results/member-features-basic-NAMC-5dfb5-and-access-member-directory-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts",
+                        "column": 31,
+                        "line": 28
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "dbf8fc4e51d8184d1e16-2a6f072c0326785e9e27",
+              "file": "member-features-basic.spec.ts",
+              "line": 16,
+              "column": 7
+            },
+            {
+              "title": "should login and access messaging system",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 11475,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Messaging element \"input[placeholder*=\"Search\"]\" not found\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T05:50:21.261Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dbf8fc4e51d8184d1e16-afdf88e4cd437fc72eb1",
+              "file": "member-features-basic.spec.ts",
+              "line": 35,
+              "column": 7
+            },
+            {
+              "title": "should test dashboard sidebar navigation",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 10338,
+                      "error": {
+                        "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Profile') resolved to 3 elements:\n    1) <div class=\"flex items-center\">…</div> aka getByRole('link', { name: 'Profile' })\n    2) <p class=\"text-sm text-namc-gray-600 leading-relaxed\">New projects that match your profile and skills</p> aka getByText('New projects that match your')\n    3) <p class=\"text-xs text-namc-gray-600 line-clamp-2\">Hi! I saw your profile and would love to discuss …</p> aka getByText('Hi! I saw your profile and')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Profile')\u001b[22m\n",
+                        "stack": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Profile') resolved to 3 elements:\n    1) <div class=\"flex items-center\">…</div> aka getByRole('link', { name: 'Profile' })\n    2) <p class=\"text-sm text-namc-gray-600 leading-relaxed\">New projects that match your profile and skills</p> aka getByText('New projects that match your')\n    3) <p class=\"text-xs text-namc-gray-600 line-clamp-2\">Hi! I saw your profile and would love to discuss …</p> aka getByText('Hi! I saw your profile and')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Profile')\u001b[22m\n\n    at /Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts:73:50",
+                        "location": {
+                          "file": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts",
+                          "column": 50,
+                          "line": 73
+                        },
+                        "snippet": "  71 |     \n  72 |     for (const item of navItems) {\n> 73 |       await expect(page.locator(`text=${item}`)).toBeVisible()\n     |                                                  ^\n  74 |     }\n  75 |     \n  76 |     // Test navigation to profile"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts",
+                            "column": 50,
+                            "line": 73
+                          },
+                          "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Profile') resolved to 3 elements:\n    1) <div class=\"flex items-center\">…</div> aka getByRole('link', { name: 'Profile' })\n    2) <p class=\"text-sm text-namc-gray-600 leading-relaxed\">New projects that match your profile and skills</p> aka getByText('New projects that match your')\n    3) <p class=\"text-xs text-namc-gray-600 line-clamp-2\">Hi! I saw your profile and would love to discuss …</p> aka getByText('Hi! I saw your profile and')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Profile')\u001b[22m\n\n\n  71 |     \n  72 |     for (const item of navItems) {\n> 73 |       await expect(page.locator(`text=${item}`)).toBeVisible()\n     |                                                  ^\n  74 |     }\n  75 |     \n  76 |     // Test navigation to profile\n    at /Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts:73:50"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T05:50:21.272Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results/member-features-basic-NAMC-526c8-ashboard-sidebar-navigation-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results/member-features-basic-NAMC-526c8-ashboard-sidebar-navigation-chromium/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results/member-features-basic-NAMC-526c8-ashboard-sidebar-navigation-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts",
+                        "column": 50,
+                        "line": 73
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "dbf8fc4e51d8184d1e16-f1fb8a30f8a48024ecc2",
+              "file": "member-features-basic.spec.ts",
+              "line": 59,
+              "column": 7
+            },
+            {
+              "title": "should test API health and auth endpoints",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 2657,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m503\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m503\u001b[39m\n    at /Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts:89:37",
+                        "location": {
+                          "file": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts",
+                          "column": 37,
+                          "line": 89
+                        },
+                        "snippet": "  87 |     // Test health endpoint\n  88 |     const healthResponse = await page.request.get('/api/health')\n> 89 |     expect(healthResponse.status()).toBe(200)\n     |                                     ^\n  90 |     \n  91 |     // Test auth me endpoint without auth (should fail)\n  92 |     const meResponse = await page.request.get('/api/auth/me')"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts",
+                            "column": 37,
+                            "line": 89
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m200\u001b[39m\nReceived: \u001b[31m503\u001b[39m\n\n  87 |     // Test health endpoint\n  88 |     const healthResponse = await page.request.get('/api/health')\n> 89 |     expect(healthResponse.status()).toBe(200)\n     |                                     ^\n  90 |     \n  91 |     // Test auth me endpoint without auth (should fail)\n  92 |     const meResponse = await page.request.get('/api/auth/me')\n    at /Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts:89:37"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T05:50:21.261Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results/member-features-basic-NAMC-51e4f-I-health-and-auth-endpoints-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/test-results/member-features-basic-NAMC-51e4f-I-health-and-auth-endpoints-chromium/video.webm"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts",
+                        "column": 37,
+                        "line": 89
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "dbf8fc4e51d8184d1e16-7215644734903f0e2d10",
+              "file": "member-features-basic.spec.ts",
+              "line": 86,
+              "column": 7
+            },
+            {
+              "title": "should test TECH program basic access",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 5236,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T05:50:26.714Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dbf8fc4e51d8184d1e16-b5a4c3be357080b69f55",
+              "file": "member-features-basic.spec.ts",
+              "line": 105,
+              "column": 7
+            },
+            {
+              "title": "should test responsive design basics",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 3571,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T05:50:33.120Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dbf8fc4e51d8184d1e16-33e4e7cda7239dee17e7",
+              "file": "member-features-basic.spec.ts",
+              "line": 117,
+              "column": 7
+            },
+            {
+              "title": "should test member profile edit functionality",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 2569,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T05:50:32.846Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dbf8fc4e51d8184d1e16-1dacdda2aba68b1ae6b2",
+              "file": "member-features-basic.spec.ts",
+              "line": 135,
+              "column": 7
+            },
+            {
+              "title": "should test HubSpot integration status",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 3692,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "TECH/HubSpot widget found on dashboard\n"
+                        },
+                        {
+                          "text": "/api/hubspot/sync status: 404\n"
+                        },
+                        {
+                          "text": "/api/tech/dashboard status: 404\n"
+                        },
+                        {
+                          "text": "/api/tech/contractors status: 404\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T05:50:33.320Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dbf8fc4e51d8184d1e16-eb2c189530bf08c207f2",
+              "file": "member-features-basic.spec.ts",
+              "line": 159,
+              "column": 7
+            },
+            {
+              "title": "should test complete member workflow",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3496,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ Complete member workflow test passed\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T05:50:35.852Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "dbf8fc4e51d8184d1e16-b15b2e3c88fa92560423",
+              "file": "member-features-basic.spec.ts",
+              "line": 188,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-07-29T05:50:20.831Z",
+    "duration": 18673.032,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

@@ -12,7 +12,6 @@ import {
   MessageSquare, 
   TrendingUp,
   Award,
-  Handshake,
   ArrowRight,
   CheckCircle,
   Star,

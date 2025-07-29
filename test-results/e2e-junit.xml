@@ -1,0 +1,153 @@
+<testsuites id="" name="" tests="9" failures="3" skipped="0" errors="0" time="18.673032">
+<testsuite name="member-features-basic.spec.ts" timestamp="2025-07-29T05:50:20.842Z" hostname="chromium" tests="9" failures="3" skipped="0" time="55.752" errors="0">
+<testcase name="NAMC Member Features - Basic Navigation › should login and access member directory" classname="member-features-basic.spec.ts" time="12.718">
+<failure message="member-features-basic.spec.ts:16:7 should login and access member directory" type="FAILURE">
+<![CDATA[  [chromium] › member-features-basic.spec.ts:16:7 › NAMC Member Features - Basic Navigation › should login and access member directory 
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('input[placeholder*="Search"]') resolved to 2 elements:
+        1) <input type="text" placeholder="Search projects, events, members..." class="w-full pl-10 pr-4 py-2 border border-namc-gray-300 rounded-lg focus:ring-2 focus:ring-namc-blue-500 focus:border-namc-blue-500"/> aka getByRole('textbox', { name: 'Search projects, events,' })
+        2) <input value="" placeholder="Search members..." class="flex rounded-lg border bg-background text-sm transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-namc-gray-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 border-namc-gray-300 focus-visible:border-namc-blue-500 focus-visible:ring-2 focus-visible:ring-namc-blue-100 h-11 px-4 py-2 w-full"/> aka getByRole('textbox', { name: 'Search members...' })
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('input[placeholder*="Search"]')
+
+
+      26 |     // Test search functionality
+      27 |     const searchInput = page.locator('input[placeholder*="Search"]')
+    > 28 |     await expect(searchInput).toBeVisible()
+         |                               ^
+      29 |     await searchInput.fill('Maria')
+      30 |     
+      31 |     // Check filter functionality
+        at /Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts:28:31
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/member-features-basic-NAMC-5dfb5-and-access-member-directory-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/member-features-basic-NAMC-5dfb5-and-access-member-directory-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/member-features-basic-NAMC-5dfb5-and-access-member-directory-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|member-features-basic-NAMC-5dfb5-and-access-member-directory-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|member-features-basic-NAMC-5dfb5-and-access-member-directory-chromium/video.webm]]
+
+[[ATTACHMENT|member-features-basic-NAMC-5dfb5-and-access-member-directory-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="NAMC Member Features - Basic Navigation › should login and access messaging system" classname="member-features-basic.spec.ts" time="11.475">
+<system-out>
+<![CDATA[Messaging element "input[placeholder*="Search"]" not found
+]]>
+</system-out>
+</testcase>
+<testcase name="NAMC Member Features - Basic Navigation › should test dashboard sidebar navigation" classname="member-features-basic.spec.ts" time="10.338">
+<failure message="member-features-basic.spec.ts:59:7 should test dashboard sidebar navigation" type="FAILURE">
+<![CDATA[  [chromium] › member-features-basic.spec.ts:59:7 › NAMC Member Features - Basic Navigation › should test dashboard sidebar navigation 
+
+    Error: expect.toBeVisible: Error: strict mode violation: locator('text=Profile') resolved to 3 elements:
+        1) <div class="flex items-center">…</div> aka getByRole('link', { name: 'Profile' })
+        2) <p class="text-sm text-namc-gray-600 leading-relaxed">New projects that match your profile and skills</p> aka getByText('New projects that match your')
+        3) <p class="text-xs text-namc-gray-600 line-clamp-2">Hi! I saw your profile and would love to discuss …</p> aka getByText('Hi! I saw your profile and')
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('text=Profile')
+
+
+      71 |     
+      72 |     for (const item of navItems) {
+    > 73 |       await expect(page.locator(`text=${item}`)).toBeVisible()
+         |                                                  ^
+      74 |     }
+      75 |     
+      76 |     // Test navigation to profile
+        at /Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts:73:50
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/member-features-basic-NAMC-526c8-ashboard-sidebar-navigation-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/member-features-basic-NAMC-526c8-ashboard-sidebar-navigation-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../test-results/member-features-basic-NAMC-526c8-ashboard-sidebar-navigation-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|member-features-basic-NAMC-526c8-ashboard-sidebar-navigation-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|member-features-basic-NAMC-526c8-ashboard-sidebar-navigation-chromium/video.webm]]
+
+[[ATTACHMENT|member-features-basic-NAMC-526c8-ashboard-sidebar-navigation-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="NAMC Member Features - Basic Navigation › should test API health and auth endpoints" classname="member-features-basic.spec.ts" time="2.657">
+<failure message="member-features-basic.spec.ts:86:7 should test API health and auth endpoints" type="FAILURE">
+<![CDATA[  [chromium] › member-features-basic.spec.ts:86:7 › NAMC Member Features - Basic Navigation › should test API health and auth endpoints 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 503
+
+      87 |     // Test health endpoint
+      88 |     const healthResponse = await page.request.get('/api/health')
+    > 89 |     expect(healthResponse.status()).toBe(200)
+         |                                     ^
+      90 |     
+      91 |     // Test auth me endpoint without auth (should fail)
+      92 |     const meResponse = await page.request.get('/api/auth/me')
+        at /Users/revalue.io/NAMC-Norcal-Member-Portal-Beta/e2e/member-features-basic.spec.ts:89:37
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../test-results/member-features-basic-NAMC-51e4f-I-health-and-auth-endpoints-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../test-results/member-features-basic-NAMC-51e4f-I-health-and-auth-endpoints-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|member-features-basic-NAMC-51e4f-I-health-and-auth-endpoints-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|member-features-basic-NAMC-51e4f-I-health-and-auth-endpoints-chromium/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="NAMC Member Features - Basic Navigation › should test TECH program basic access" classname="member-features-basic.spec.ts" time="5.236">
+</testcase>
+<testcase name="NAMC Member Features - Basic Navigation › should test responsive design basics" classname="member-features-basic.spec.ts" time="3.571">
+</testcase>
+<testcase name="NAMC Member Features - Basic Navigation › should test member profile edit functionality" classname="member-features-basic.spec.ts" time="2.569">
+</testcase>
+<testcase name="NAMC Member Features - Basic Navigation › should test HubSpot integration status" classname="member-features-basic.spec.ts" time="3.692">
+<system-out>
+<![CDATA[TECH/HubSpot widget found on dashboard
+/api/hubspot/sync status: 404
+/api/tech/dashboard status: 404
+/api/tech/contractors status: 404
+]]>
+</system-out>
+</testcase>
+<testcase name="NAMC Member Features - Basic Navigation › should test complete member workflow" classname="member-features-basic.spec.ts" time="3.496">
+<system-out>
+<![CDATA[✅ Complete member workflow test passed
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

@@ -1,0 +1,464 @@
+/**
+ * E2E Tests: Workflow Management
+ * 
+ * End-to-end tests for critical workflow management flows:
+ * - Workflow creation and configuration
+ * - Workflow execution and monitoring
+ * - Member enrollment and progression
+ * - Analytics and reporting access
+ */
+
+import { test, expect, Page } from '@playwright/test'
+import { testData } from './fixtures/test-data'
+import { authHelper } from './helpers/auth'
+import { workflowHelper } from './helpers/workflow'
+import { dashboardHelper } from './helpers/dashboard'
+
+test.describe('Workflow Management', () => {
+  let page: Page
+  let adminUser: any
+  let memberUser: any
+
+  test.beforeAll(async ({ browser }) => {
+    page = await browser.newPage()
+    
+    // Set up test users
+    adminUser = await testData.createAdminUser()
+    memberUser = await testData.createMemberUser()
+  })
+
+  test.beforeEach(async () => {
+    // Reset application state
+    await testData.cleanDatabase()
+    await testData.seedBasicData()
+  })
+
+  test.afterAll(async () => {
+    await testData.cleanup()
+    await page.close()
+  })
+
+  test.describe('Workflow Creation Flow', () => {
+    test('should create member onboarding workflow', async () => {
+      // Login as admin
+      await authHelper.loginAsAdmin(page, adminUser)
+      
+      // Navigate to workflow management
+      await page.goto('/admin/workflows')
+      
+      // Start workflow creation
+      await page.click('[data-testid="create-workflow-button"]')
+      
+      // Fill workflow details
+      await page.fill('[data-testid="workflow-name"]', 'New Member Onboarding')
+      await page.fill('[data-testid="workflow-description"]', 'Automated onboarding process for new NAMC members')
+      await page.selectOption('[data-testid="workflow-type"]', 'member_onboarding')
+      
+      // Configure workflow steps
+      await page.click('[data-testid="add-step-button"]')
+      await page.selectOption('[data-testid="step-type"]', 'send_welcome_email')
+      await page.fill('[data-testid="step-delay"]', '0')
+      
+      await page.click('[data-testid="add-step-button"]')
+      await page.selectOption('[data-testid="step-type"]', 'create_deal')
+      await page.fill('[data-testid="step-delay"]', '1440') // 24 hours
+      
+      // Set triggers
+      await page.click('[data-testid="trigger-section"]')
+      await page.check('[data-testid="trigger-member-signup"]')
+      
+      // Enable workflow
+      await page.check('[data-testid="workflow-enabled"]')
+      
+      // Save workflow
+      await page.click('[data-testid="save-workflow-button"]')
+      
+      // Verify success
+      await expect(page.locator('[data-testid="success-message"]')).toBeVisible()
+      await expect(page.locator('[data-testid="workflow-list"]')).toContainText('New Member Onboarding')
+      
+      // Verify workflow details
+      await page.click('[data-testid="workflow-item"]:has-text("New Member Onboarding")')
+      await expect(page.locator('[data-testid="workflow-name"]')).toHaveValue('New Member Onboarding')
+      await expect(page.locator('[data-testid="workflow-type"]')).toHaveValue('member_onboarding')
+      await expect(page.locator('[data-testid="workflow-enabled"]')).toBeChecked()
+      
+      // Verify steps are configured
+      await expect(page.locator('[data-testid="workflow-steps"]')).toContainText('send_welcome_email')
+      await expect(page.locator('[data-testid="workflow-steps"]')).toContainText('create_deal')
+    })
+
+    test('should handle workflow creation validation errors', async () => {
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto('/admin/workflows')
+      
+      // Try to create workflow without required fields
+      await page.click('[data-testid="create-workflow-button"]')
+      await page.click('[data-testid="save-workflow-button"]')
+      
+      // Verify validation errors
+      await expect(page.locator('[data-testid="name-error"]')).toContainText('Name is required')
+      await expect(page.locator('[data-testid="type-error"]')).toContainText('Workflow type is required')
+      
+      // Fill name but leave type empty
+      await page.fill('[data-testid="workflow-name"]', 'Test Workflow')
+      await page.click('[data-testid="save-workflow-button"]')
+      
+      await expect(page.locator('[data-testid="type-error"]')).toContainText('Workflow type is required')
+      await expect(page.locator('[data-testid="name-error"]')).not.toBeVisible()
+    })
+
+    test('should duplicate existing workflow', async () => {
+      // Create initial workflow
+      const existingWorkflow = await testData.createWorkflow({
+        name: 'Original Workflow',
+        type: 'member_onboarding',
+        isEnabled: true
+      })
+
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto('/admin/workflows')
+      
+      // Find and duplicate workflow
+      await page.click(`[data-testid="workflow-${existingWorkflow.id}"] [data-testid="workflow-menu"]`)
+      await page.click('[data-testid="duplicate-workflow"]')
+      
+      // Verify duplicate form is pre-filled
+      await expect(page.locator('[data-testid="workflow-name"]')).toHaveValue('Copy of Original Workflow')
+      await expect(page.locator('[data-testid="workflow-type"]')).toHaveValue('member_onboarding')
+      await expect(page.locator('[data-testid="workflow-enabled"]')).not.toBeChecked() // Should be disabled by default
+      
+      // Modify and save
+      await page.fill('[data-testid="workflow-name"]', 'Duplicated Member Onboarding')
+      await page.click('[data-testid="save-workflow-button"]')
+      
+      // Verify both workflows exist
+      await expect(page.locator('[data-testid="workflow-list"]')).toContainText('Original Workflow')
+      await expect(page.locator('[data-testid="workflow-list"]')).toContainText('Duplicated Member Onboarding')
+    })
+  })
+
+  test.describe('Workflow Execution Monitoring', () => {
+    test('should monitor workflow execution in real-time', async () => {
+      // Set up workflow and execution
+      const workflow = await testData.createWorkflow({
+        name: 'Test Monitoring Workflow',
+        type: 'member_onboarding',
+        isEnabled: true
+      })
+      
+      const execution = await testData.createWorkflowExecution(workflow.id, memberUser.contactId)
+
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto(`/admin/workflows/${workflow.id}/executions`)
+      
+      // Verify execution appears in list
+      await expect(page.locator('[data-testid="execution-list"]')).toContainText(execution.id)
+      
+      // Click on execution to view details
+      await page.click(`[data-testid="execution-${execution.id}"]`)
+      
+      // Verify execution details
+      await expect(page.locator('[data-testid="execution-status"]')).toContainText('RUNNING')
+      await expect(page.locator('[data-testid="execution-contact"]')).toContainText(memberUser.email)
+      await expect(page.locator('[data-testid="execution-workflow"]')).toContainText('Test Monitoring Workflow')
+      
+      // Verify step progress
+      await expect(page.locator('[data-testid="step-progress"]')).toBeVisible()
+      
+      // Test real-time updates (simulate status change)
+      await testData.updateExecutionStatus(execution.id, 'COMPLETED')
+      
+      // Wait for real-time update
+      await expect(page.locator('[data-testid="execution-status"]')).toContainText('COMPLETED', { timeout: 10000 })
+    })
+
+    test('should handle execution errors and retry mechanism', async () => {
+      const workflow = await testData.createWorkflow({
+        name: 'Error Test Workflow',
+        type: 'member_onboarding',
+        isEnabled: true
+      })
+      
+      const execution = await testData.createWorkflowExecution(workflow.id, memberUser.contactId, {
+        status: 'FAILED',
+        errorMessage: 'HubSpot API connection failed'
+      })
+
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto(`/admin/workflows/${workflow.id}/executions`)
+      
+      // View failed execution
+      await page.click(`[data-testid="execution-${execution.id}"]`)
+      
+      // Verify error information
+      await expect(page.locator('[data-testid="execution-status"]')).toContainText('FAILED')
+      await expect(page.locator('[data-testid="error-message"]')).toContainText('HubSpot API connection failed')
+      
+      // Test retry functionality
+      await page.click('[data-testid="retry-execution-button"]')
+      
+      // Confirm retry dialog
+      await page.click('[data-testid="confirm-retry-button"]')
+      
+      // Verify new execution is created
+      await expect(page.locator('[data-testid="success-message"]')).toContainText('Execution restarted successfully')
+      
+      // Navigate back to executions list
+      await page.goto(`/admin/workflows/${workflow.id}/executions`)
+      
+      // Verify new execution appears
+      await expect(page.locator('[data-testid="execution-list"] tbody tr')).toHaveCount(2)
+    })
+
+    test('should filter and search executions', async () => {
+      const workflow = await testData.createWorkflow({
+        name: 'Filter Test Workflow',
+        type: 'member_onboarding',
+        isEnabled: true
+      })
+      
+      // Create multiple executions with different statuses
+      await testData.createWorkflowExecution(workflow.id, 'contact-1', { status: 'COMPLETED' })
+      await testData.createWorkflowExecution(workflow.id, 'contact-2', { status: 'RUNNING' })
+      await testData.createWorkflowExecution(workflow.id, 'contact-3', { status: 'FAILED' })
+
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto(`/admin/workflows/${workflow.id}/executions`)
+      
+      // Verify all executions are shown initially
+      await expect(page.locator('[data-testid="execution-list"] tbody tr')).toHaveCount(3)
+      
+      // Filter by status - COMPLETED
+      await page.selectOption('[data-testid="status-filter"]', 'COMPLETED')
+      await page.click('[data-testid="apply-filters-button"]')
+      
+      await expect(page.locator('[data-testid="execution-list"] tbody tr')).toHaveCount(1)
+      await expect(page.locator('[data-testid="execution-list"]')).toContainText('COMPLETED')
+      
+      // Filter by status - RUNNING
+      await page.selectOption('[data-testid="status-filter"]', 'RUNNING')
+      await page.click('[data-testid="apply-filters-button"]')
+      
+      await expect(page.locator('[data-testid="execution-list"] tbody tr')).toHaveCount(1)
+      await expect(page.locator('[data-testid="execution-list"]')).toContainText('RUNNING')
+      
+      // Clear filters
+      await page.click('[data-testid="clear-filters-button"]')
+      await expect(page.locator('[data-testid="execution-list"] tbody tr')).toHaveCount(3)
+      
+      // Test search by contact ID
+      await page.fill('[data-testid="search-executions"]', 'contact-1')
+      await page.press('[data-testid="search-executions"]', 'Enter')
+      
+      await expect(page.locator('[data-testid="execution-list"] tbody tr')).toHaveCount(1)
+      await expect(page.locator('[data-testid="execution-list"]')).toContainText('contact-1')
+    })
+  })
+
+  test.describe('Member Enrollment Flow', () => {
+    test('should automatically enroll member in onboarding workflow', async () => {
+      // Create enabled onboarding workflow
+      const workflow = await testData.createWorkflow({
+        name: 'Auto Enrollment Test',
+        type: 'member_onboarding',
+        isEnabled: true,
+        triggers: ['member_signup']
+      })
+
+      // Simulate new member signup
+      await page.goto('/register')
+      
+      // Fill registration form
+      await page.fill('[data-testid="first-name"]', 'John')
+      await page.fill('[data-testid="last-name"]', 'Doe')
+      await page.fill('[data-testid="email"]', 'john.doe@test.com')
+      await page.fill('[data-testid="company"]', 'Test Construction Co.')
+      await page.fill('[data-testid="password"]', 'SecurePass123!')
+      await page.fill('[data-testid="confirm-password"]', 'SecurePass123!')
+      
+      // Accept terms
+      await page.check('[data-testid="accept-terms"]')
+      
+      // Submit registration
+      await page.click('[data-testid="register-button"]')
+      
+      // Verify registration success
+      await expect(page.locator('[data-testid="registration-success"]')).toBeVisible()
+      
+      // Login as admin to verify workflow execution
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto(`/admin/workflows/${workflow.id}/executions`)
+      
+      // Verify execution was created for new member
+      await expect(page.locator('[data-testid="execution-list"]')).toContainText('john.doe@test.com')
+      await expect(page.locator('[data-testid="execution-list"]')).toContainText('RUNNING')
+    })
+
+    test('should handle manual member enrollment', async () => {
+      const workflow = await testData.createWorkflow({
+        name: 'Manual Enrollment Test',
+        type: 'member_onboarding',
+        isEnabled: true
+      })
+
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto(`/admin/workflows/${workflow.id}`)
+      
+      // Go to enrollment section
+      await page.click('[data-testid="enrollment-tab"]')
+      
+      // Add member to workflow
+      await page.click('[data-testid="enroll-member-button"]')
+      
+      // Search for member
+      await page.fill('[data-testid="member-search"]', memberUser.email)
+      await page.press('[data-testid="member-search"]', 'Enter')
+      
+      // Select member from results
+      await page.click(`[data-testid="member-${memberUser.id}"]`)
+      
+      // Confirm enrollment
+      await page.click('[data-testid="confirm-enrollment-button"]')
+      
+      // Verify success message
+      await expect(page.locator('[data-testid="success-message"]')).toContainText('Member enrolled successfully')
+      
+      // Verify execution was created
+      await page.goto(`/admin/workflows/${workflow.id}/executions`)
+      await expect(page.locator('[data-testid="execution-list"]')).toContainText(memberUser.email)
+    })
+
+    test('should prevent duplicate enrollments', async () => {
+      const workflow = await testData.createWorkflow({
+        name: 'Duplicate Prevention Test',
+        type: 'member_onboarding',
+        isEnabled: true
+      })
+      
+      // Create existing execution
+      await testData.createWorkflowExecution(workflow.id, memberUser.contactId)
+
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto(`/admin/workflows/${workflow.id}`)
+      await page.click('[data-testid="enrollment-tab"]')
+      
+      // Try to enroll same member again
+      await page.click('[data-testid="enroll-member-button"]')
+      await page.fill('[data-testid="member-search"]', memberUser.email)
+      await page.press('[data-testid="member-search"]', 'Enter')
+      await page.click(`[data-testid="member-${memberUser.id}"]`)
+      await page.click('[data-testid="confirm-enrollment-button"]')
+      
+      // Verify error message
+      await expect(page.locator('[data-testid="error-message"]')).toContainText('Member is already enrolled in this workflow')
+    })
+  })
+
+  test.describe('Analytics Dashboard Access', () => {
+    test('should display workflow analytics for admin users', async () => {
+      // Set up workflow with analytics data
+      const workflow = await testData.createWorkflow({
+        name: 'Analytics Test Workflow',
+        type: 'member_onboarding',
+        isEnabled: true
+      })
+      
+      await testData.createAnalyticsData(workflow.id)
+
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto('/admin/analytics')
+      
+      // Verify analytics dashboard loads
+      await expect(page.locator('[data-testid="analytics-dashboard"]')).toBeVisible()
+      
+      // Check overview widgets
+      await expect(page.locator('[data-testid="total-workflows"]')).toBeVisible()
+      await expect(page.locator('[data-testid="active-workflows"]')).toBeVisible()
+      await expect(page.locator('[data-testid="total-executions"]')).toBeVisible()
+      await expect(page.locator('[data-testid="success-rate"]')).toBeVisible()
+      
+      // Check workflow performance section
+      await expect(page.locator('[data-testid="workflow-performance"]')).toBeVisible()
+      await expect(page.locator('[data-testid="workflow-performance"]')).toContainText('Analytics Test Workflow')
+      
+      // Test time range filter
+      await page.selectOption('[data-testid="time-range-select"]', 'week')
+      await expect(page.locator('[data-testid="loading-indicator"]')).toBeVisible()
+      await expect(page.locator('[data-testid="loading-indicator"]')).not.toBeVisible({ timeout: 10000 })
+      
+      // Verify data updates
+      await expect(page.locator('[data-testid="analytics-dashboard"]')).toBeVisible()
+    })
+
+    test('should restrict analytics access for regular members', async () => {
+      await authHelper.loginAsMember(page, memberUser)
+      
+      // Try to access analytics directly
+      await page.goto('/admin/analytics')
+      
+      // Should be redirected to unauthorized page or dashboard
+      await expect(page).toHaveURL(/\/(unauthorized|dashboard)/);
+      
+      // Verify error message if on unauthorized page
+      if (page.url().includes('unauthorized')) {
+        await expect(page.locator('[data-testid="unauthorized-message"]')).toContainText('You do not have permission to access this page')
+      }
+    })
+
+    test('should export analytics data', async () => {
+      const workflow = await testData.createWorkflow({
+        name: 'Export Test Workflow',
+        type: 'member_onboarding',
+        isEnabled: true
+      })
+      
+      await testData.createAnalyticsData(workflow.id)
+
+      await authHelper.loginAsAdmin(page, adminUser)
+      await page.goto('/admin/analytics')
+      
+      // Start download
+      const downloadPromise = page.waitForEvent('download')
+      await page.click('[data-testid="export-analytics-button"]')
+      await page.selectOption('[data-testid="export-format"]', 'csv')
+      await page.click('[data-testid="confirm-export-button"]')
+      
+      // Wait for download to complete
+      const download = await downloadPromise
+      
+      // Verify download
+      expect(download.suggestedFilename()).toMatch(/analytics.*\.csv$/)
+      
+      // Save and verify file content
+      const path = await download.path()
+      expect(path).toBeTruthy()
+    })
+  })
+
+  test.describe('Cross-browser Compatibility', () => {
+    ['chromium', 'firefox', 'webkit'].forEach(browserName => {
+      test(`should work correctly in ${browserName}`, async ({ browser }) => {
+        const context = await browser.newContext()
+        const browserPage = await context.newPage()
+        
+        try {
+          await authHelper.loginAsAdmin(browserPage, adminUser)
+          await browserPage.goto('/admin/workflows')
+          
+          // Test basic functionality
+          await expect(browserPage.locator('[data-testid="workflow-list"]')).toBeVisible()
+          await expect(browserPage.locator('[data-testid="create-workflow-button"]')).toBeVisible()
+          
+          // Test workflow creation
+          await browserPage.click('[data-testid="create-workflow-button"]')
+          await expect(browserPage.locator('[data-testid="workflow-form"]')).toBeVisible()
+          
+        } finally {
+          await browserPage.close()
+          await context.close()
+        }
+      })
+    })
+  })
+})

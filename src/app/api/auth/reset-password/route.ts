@@ -64,7 +64,10 @@ export async function POST(request: NextRequest) {
         message: 'Password reset successful. You can now log in with your new password.'
       },
       'Password reset completed successfully',
-      { requestId }
+      { 
+        timestamp: new Date().toISOString(),
+        requestId 
+      }
     )
 
   } catch (error) {
@@ -112,7 +115,10 @@ export async function GET(request: NextRequest) {
         expiresAt: user.passwordResetExpires
       },
       'Reset token is valid',
-      { requestId }
+      { 
+        timestamp: new Date().toISOString(),
+        requestId 
+      }
     )
 
   } catch (error) {

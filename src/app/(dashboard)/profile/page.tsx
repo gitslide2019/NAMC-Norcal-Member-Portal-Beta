@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { AuthRequiredRoute } from '@/components/auth/protected-route'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -133,7 +134,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <AuthRequiredRoute>
+      <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -504,6 +506,7 @@ export default function ProfilePage() {
           </form>
         </div>
       </div>
-    </div>
+      </div>
+    </AuthRequiredRoute>
   )
 }

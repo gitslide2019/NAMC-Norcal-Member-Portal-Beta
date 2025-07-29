@@ -1,0 +1,200 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - link "NAMC NorCal":
+    - /url: /
+  - navigation:
+    - link "About":
+      - /url: /about
+    - link "Events":
+      - /url: /events
+    - link "Members":
+      - /url: /members
+    - button "Programs":
+      - text: Programs
+      - img
+    - link "Resources":
+      - /url: /resources
+  - link "Maria":
+    - /url: /dashboard
+    - img
+    - text: Maria
+  - button "Sign Out":
+    - img
+    - text: Sign Out
+- main:
+  - link "NAMC NorCal":
+    - /url: /
+  - navigation:
+    - link "Dashboard":
+      - /url: /dashboard
+      - img
+      - text: Dashboard
+    - link "Profile":
+      - /url: /profile
+      - img
+      - text: Profile
+    - link "Projects":
+      - /url: /projects
+      - img
+      - text: Projects
+    - link "Events":
+      - /url: /events
+      - img
+      - text: Events
+    - link "Messages 3":
+      - /url: /messages
+      - img
+      - text: Messages 3
+    - link "Directory":
+      - /url: /directory
+      - img
+      - text: Directory
+    - link "Learning":
+      - /url: /courses
+      - img
+      - text: Learning
+    - link "Settings":
+      - /url: /settings
+      - img
+      - text: Settings
+  - text: MJ
+  - paragraph: Maria Johnson
+  - paragraph: Member
+  - img
+  - textbox "Search projects, events, members..."
+  - button:
+    - img
+  - button "MJ Maria":
+    - text: MJ Maria
+    - img
+  - main:
+    - heading "Welcome back, Maria!" [level=1]
+    - paragraph: Here's what's happening in your NAMC NorCal community today.
+    - heading "Projects Applied" [level=3]
+    - text: "8"
+    - paragraph: Government and private sector opportunities
+    - text: +2 this week
+    - heading "Events Attended" [level=3]
+    - text: "12"
+    - paragraph: Networking and professional development
+    - text: "Rank #10"
+    - heading "Courses Enrolled" [level=3]
+    - text: "3"
+    - paragraph: Professional certification programs
+    - text: 2 in progress • 75% completion
+    - heading "Unread Messages" [level=3]
+    - text: "5"
+    - paragraph: Business communications and opportunities
+    - link "View Messages":
+      - /url: /messages
+    - heading "TECH Clean California" [level=3]
+    - text: Advanced Certified
+    - paragraph: Heat pump incentive program status and active projects
+    - text: 3 Active Projects 15 Completed $23,500 Pending $127,500 Total Earned
+    - heading "Recent Projects" [level=4]
+    - text: Johnson Residence PGE Installation Smith Commercial SCE Documentation Davis Home SDGE Agreement
+    - link "New Project":
+      - /url: /programs/tech-clean-california/projects/new
+    - link "Incentives":
+      - /url: /programs/tech-clean-california/incentives
+    - link "Program":
+      - /url: /programs/tech-clean-california
+    - text: "Certification renewal due: 12/30/2024"
+    - heading "Recent Project Opportunities" [level=3]
+    - paragraph: New projects that match your profile and skills
+    - link "View All":
+      - /url: /projects
+    - heading "Oakland Bay Bridge Maintenance" [level=3]
+    - text: "INFRASTRUCTURE $2.5M - $3.2M Oakland, CA Deadline: 2/14/2024 BIDDING OPEN"
+    - button "View Details"
+    - heading "San Francisco Housing Development" [level=3]
+    - text: "RESIDENTIAL $15M - $20M San Francisco, CA Deadline: 2/19/2024 BIDDING OPEN"
+    - button "View Details"
+    - heading "Community Center Renovation" [level=3]
+    - text: "RENOVATION $800K - $1.2M Berkeley, CA Deadline: 2/9/2024 BIDDING OPEN"
+    - button "View Details"
+    - heading "Upcoming Events" [level=3]
+    - link:
+      - /url: /events
+    - heading "NAMC NorCal Networking Mixer" [level=4]
+    - paragraph: 2/7/2024 at 6:00 PM
+    - paragraph: 45/60 registered
+    - heading "Construction Safety Training" [level=4]
+    - paragraph: 2/11/2024 at 9:00 AM
+    - paragraph: 28/30 registered
+    - heading "Green Building Certification Workshop" [level=4]
+    - paragraph: 2/14/2024 at 10:00 AM
+    - paragraph: 22/25 registered
+    - heading "Recent Messages" [level=3]
+    - link "View All":
+      - /url: /messages
+    - heading "Maria Rodriguez" [level=4]
+    - text: 2 hours ago
+    - heading "Partnership Opportunity" [level=5]
+    - paragraph: Hi! I saw your profile and would love to discuss a potential partnership...
+    - heading "NAMC Admin" [level=4]
+    - text: 5 hours ago
+    - heading "New Project Opportunity" [level=5]
+    - paragraph: A new project matching your skills has been posted...
+    - heading "David Chen" [level=4]
+    - text: 1 day ago
+    - heading "Event Follow-up" [level=5]
+    - paragraph: Thanks for attending the networking event. Here are the contacts...
+    - heading "Quick Actions" [level=3]
+    - paragraph: Common tasks and shortcuts to help you get things done faster
+    - link "Post a Project":
+      - /url: /projects/new
+    - link "Register for Event":
+      - /url: /events
+    - link "Find Members":
+      - /url: /directory
+- contentinfo:
+  - heading "NAMC NorCal" [level=3]
+  - paragraph: Empowering minority contractors in Northern California through networking, training, and business opportunities.
+  - heading "Platform" [level=4]
+  - list:
+    - listitem:
+      - link "About":
+        - /url: /about
+    - listitem:
+      - link "Events":
+        - /url: /events
+    - listitem:
+      - link "Members":
+        - /url: /members
+    - listitem:
+      - link "Resources":
+        - /url: /resources
+  - heading "Support" [level=4]
+  - list:
+    - listitem:
+      - link "Help Center":
+        - /url: /help
+    - listitem:
+      - link "Contact":
+        - /url: /contact
+    - listitem:
+      - link "Privacy":
+        - /url: /privacy
+    - listitem:
+      - link "Terms":
+        - /url: /terms
+  - heading "Connect" [level=4]
+  - list:
+    - listitem:
+      - link "LinkedIn":
+        - /url: "#"
+    - listitem:
+      - link "Twitter":
+        - /url: "#"
+    - listitem:
+      - link "Facebook":
+        - /url: "#"
+    - listitem:
+      - link "Instagram":
+        - /url: "#"
+  - paragraph: © 2024 NAMC Northern California. All rights reserved.
+- alert
+```

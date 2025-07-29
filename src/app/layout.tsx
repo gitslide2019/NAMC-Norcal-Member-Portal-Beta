@@ -5,7 +5,8 @@ import { Providers } from '@/components/providers'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Toaster } from '@/components/ui/toaster'
-import { PWAInstallButton, OfflineIndicator } from '@/components/pwa/PWAInstallPrompt'
+// PWA components disabled due to build issues
+// import { PWAInstallButton, OfflineIndicator } from '@/components/pwa/PWAInstallPrompt'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -115,8 +116,8 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <Providers>
-          {/* PWA Offline Indicator */}
-          <OfflineIndicator />
+          {/* PWA Offline Indicator - disabled due to build issues */}
+          {/* <OfflineIndicator /> */}
           
           <div className="min-h-screen bg-background flex flex-col">
             <Header />
@@ -126,8 +127,8 @@ export default function RootLayout({
             <Footer />
           </div>
           
-          {/* PWA Install Button */}
-          <PWAInstallButton />
+          {/* PWA Install Button - disabled due to build issues */}
+          {/* <PWAInstallButton /> */}
           
           <Toaster />
         </Providers>

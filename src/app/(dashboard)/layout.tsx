@@ -42,12 +42,11 @@ const memberNavItems: NavItem[] = [
 ]
 
 const adminNavItems: NavItem[] = [
-  { name: 'Admin Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'User Management', href: '/admin/users', icon: Users },
-  { name: 'Project Management', href: '/admin/projects', icon: Building2 },
-  { name: 'Event Management', href: '/admin/events', icon: Calendar },
-  { name: 'Analytics', href: '/admin/analytics', icon: LayoutDashboard },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Applications', href: '/admin/applications', icon: Users },
+  { name: 'TECH Program', href: '/admin/tech', icon: Building2 },
+  { name: 'System Activity', href: '/admin/activity', icon: Calendar },
+  { name: 'System Alerts', href: '/admin/alerts', icon: LayoutDashboard },
 ]
 
 export default function DashboardLayout({

@@ -1,0 +1,465 @@
+/**
+ * Test Data Fixtures for E2E Tests
+ * 
+ * Centralized test data management for end-to-end tests:
+ * - User creation and management
+ * - Workflow and execution test data
+ * - Analytics data seeding
+ * - Database cleanup utilities
+ */
+
+import { prisma } from '../../src/lib/prisma'
+import bcrypt from 'bcrypt'
+
+export const testData = {
+  /**
+   * Create admin user for testing
+   */
+  async createAdminUser() {
+    const hashedPassword = await bcrypt.hash('admin123', 10)
+    
+    const admin = await prisma.user.create({
+      data: {
+        firstName: 'Admin',
+        lastName: 'User',
+        email: 'admin@test-namc.org',
+        password: hashedPassword,
+        memberType: 'admin',
+        company: 'NAMC NorCal',
+        phone: '+1-555-0101',
+        isVerified: true
+      }
+    })
+    
+    return {
+      ...admin,
+      password: 'admin123' // Return plain password for login tests
+    }
+  },
+
+  /**
+   * Create regular member user for testing
+   */
+  async createMemberUser() {
+    const hashedPassword = await bcrypt.hash('member123', 10)
+    
+    const member = await prisma.user.create({
+      data: {
+        firstName: 'John',
+        lastName: 'Member',
+        email: 'john.member@test-construction.com',
+        password: hashedPassword,
+        memberType: 'REGULAR',
+        company: 'Test Construction Co.',
+        phone: '+1-555-0102',
+        isVerified: true
+      }
+    })
+    
+    return {
+      ...member,
+      password: 'member123' // Return plain password for login tests
+    }
+  },
+
+  /**
+   * Create multiple test users
+   */
+  async createTestUsers(count: number = 10) {
+    const users = []
+    
+    for (let i = 0; i < count; i++) {
+      const hashedPassword = await bcrypt.hash('test123', 10)
+      
+      const user = await prisma.user.create({
+        data: {
+          firstName: `Test${i}`,
+          lastName: `User${i}`,
+          email: `test${i}@test-company${i}.com`,
+          password: hashedPassword,
+          memberType: 'REGULAR',
+          company: `Test Company ${i}`,
+          phone: `+1-555-${String(i).padStart(4, '0')}`,
+          isVerified: true
+        }
+      })
+      
+      users.push({
+        ...user,
+        password: 'test123'
+      })
+    }
+    
+    return users
+  },
+
+  /**
+   * Create test workflow - DISABLED: HubSpot workflow model not in current schema
+   */
+  // async createWorkflow(data: {
+  //   name?: string
+  //   type?: 'member_onboarding' | 'event_followup' | 'deal_nurturing' | 'member_retention'
+  //   description?: string
+  //   isEnabled?: boolean
+  //   hubSpotWorkflowId?: string
+  //   steps?: any[]
+  //   triggers?: string[]
+  // } = {}) {
+  //   const workflow = await prisma.hubSpotWorkflow.create({
+  //     data: {
+  //       name: data.name || 'Test Workflow',
+  //       type: data.type || 'member_onboarding',
+  //       description: data.description || 'Test workflow description',
+  //       isEnabled: data.isEnabled !== false,
+  //       hubSpotWorkflowId: data.hubSpotWorkflowId || `test-workflow-${Date.now()}`,
+  //       steps: data.steps || [
+  //         {
+  //           type: 'send_welcome_email',
+  //           delay: 0,
+  //           properties: {
+  //             templateId: 'welcome_template',
+  //             subject: 'Welcome to NAMC NorCal'
+  //           }
+  //         },
+  //         {
+  //           type: 'create_deal',
+  //           delay: 1440, // 24 hours
+  //           properties: {
+  //             dealName: 'Member Onboarding',
+  //             pipeline: 'member_pipeline',
+  //             stage: 'new_member'
+  //           }
+  //         }
+  //       ],
+  //       triggers: data.triggers || ['member_signup'],
+  //       createdAt: new Date(),
+  //       updatedAt: new Date()
+  //     }
+  //   })
+  //   
+  //   return workflow
+  // },
+
+  /**
+   * Create workflow execution
+   */
+  async createWorkflowExecution(workflowId: string, contactId: string, data: {
+    id?: string
+    status?: 'RUNNING' | 'COMPLETED' | 'FAILED' | 'PAUSED'
+    hubSpotExecutionId?: string
+    currentStep?: number
+    enrolledAt?: Date
+    completedAt?: Date
+    errorMessage?: string
+    executionData?: any
+  } = {}) {
+    const execution = await prisma.hubSpotWorkflowExecution.create({
+      data: {
+        id: data.id || `exec-${Date.now()}`,
+        workflowId: workflowId,
+        contactId: contactId,
+        status: data.status || 'RUNNING',
+        hubSpotExecutionId: data.hubSpotExecutionId || `hs-exec-${Date.now()}`,
+        currentStep: data.currentStep || 0,
+        enrolledAt: data.enrolledAt || new Date(),
+        completedAt: data.completedAt,
+        errorMessage: data.errorMessage,
+        executionData: data.executionData || {
+          steps: [
+            {
+              stepId: 0,
+              type: 'send_welcome_email',
+              status: data.status === 'COMPLETED' ? 'completed' : 'pending',
+              executedAt: data.status === 'COMPLETED' ? new Date() : null
+            }
+          ]
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    })
+    
+    return execution
+  },
+
+  /**
+   * Update execution status
+   */
+  async updateExecutionStatus(executionId: string, status: 'RUNNING' | 'COMPLETED' | 'FAILED' | 'PAUSED') {
+    const execution = await prisma.hubSpotWorkflowExecution.update({
+      where: { id: executionId },
+      data: {
+        status,
+        completedAt: status === 'COMPLETED' ? new Date() : null,
+        updatedAt: new Date()
+      }
+    })
+    
+    return execution
+  },
+
+  /**
+   * Create analytics data
+   */
+  async createAnalyticsData(workflowId: string) {
+    // Create multiple executions with different statuses
+    const executions = await Promise.all([
+      this.createWorkflowExecution(workflowId, 'contact-001', { status: 'COMPLETED' }),
+      this.createWorkflowExecution(workflowId, 'contact-002', { status: 'COMPLETED' }),
+      this.createWorkflowExecution(workflowId, 'contact-003', { status: 'RUNNING' }),
+      this.createWorkflowExecution(workflowId, 'contact-004', { status: 'FAILED', errorMessage: 'Network timeout' }),
+      this.createWorkflowExecution(workflowId, 'contact-005', { status: 'COMPLETED' })
+    ])
+    
+    return executions
+  },
+
+  /**
+   * Create test events
+   */
+  async createTestEvents(count: number = 5) {
+    const events = []
+    
+    for (let i = 0; i < count; i++) {
+      const event = await prisma.event.create({
+        data: {
+          title: `Test Event ${i + 1}`,
+          description: `Description for test event ${i + 1}`,
+          date: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000), // i+1 days from now
+          location: `Test Location ${i + 1}`,
+          maxCapacity: 50 + i * 10,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      })
+      
+      events.push(event)
+    }
+    
+    return events
+  },
+
+  /**
+   * Create test announcements
+   */
+  async createTestAnnouncements(adminUserId: string, count: number = 3) {
+    const announcements = []
+    
+    for (let i = 0; i < count; i++) {
+      const announcement = await prisma.announcement.create({
+        data: {
+          title: `Test Announcement ${i + 1}`,
+          content: `Content for test announcement ${i + 1}. This is a test announcement for E2E testing purposes.`,
+          authorId: adminUserId,
+          isPublished: true,
+          priority: i === 0 ? 'HIGH' : i === 1 ? 'MEDIUM' : 'LOW',
+          createdAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000), // i days ago
+          updatedAt: new Date()
+        }
+      })
+      
+      announcements.push(announcement)
+    }
+    
+    return announcements
+  },
+
+  /**
+   * Seed basic test data
+   */
+  async seedBasicData() {
+    try {
+      // Create admin user
+      const admin = await this.createAdminUser()
+      
+      // Create some member users
+      const members = await this.createTestUsers(5)
+      
+      // Create test workflows
+      const workflows = await Promise.all([
+        this.createWorkflow({
+          name: 'Member Onboarding Flow',
+          type: 'member_onboarding',
+          isEnabled: true
+        }),
+        this.createWorkflow({
+          name: 'Event Follow-up Workflow',
+          type: 'event_followup',
+          isEnabled: true
+        }),
+        this.createWorkflow({
+          name: 'Deal Nurturing Campaign',
+          type: 'deal_nurturing',
+          isEnabled: false
+        })
+      ])
+      
+      // Create test events
+      const events = await this.createTestEvents(3)
+      
+      // Create test announcements
+      const announcements = await this.createTestAnnouncements(admin.id, 2)
+      
+      return {
+        admin,
+        members,
+        workflows,
+        events,
+        announcements
+      }
+    } catch (error) {
+      console.error('Error seeding test data:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Clean database for tests
+   */
+  async cleanDatabase() {
+    try {
+      // Delete in order to respect foreign key constraints
+      await prisma.hubSpotWorkflowExecution.deleteMany({})
+      await prisma.hubSpotWorkflow.deleteMany({})
+      await prisma.eventRegistration.deleteMany({})
+      await prisma.event.deleteMany({})
+      await prisma.announcement.deleteMany({})
+      await prisma.message.deleteMany({})
+      await prisma.resource.deleteMany({})
+      await prisma.adminAction.deleteMany({})
+      await prisma.user.deleteMany({})
+    } catch (error) {
+      console.error('Error cleaning database:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Full cleanup including database reset
+   */
+  async cleanup() {
+    await this.cleanDatabase()
+  },
+
+  /**
+   * Generate JWT token for API testing
+   */
+  generateTestToken(userId: string, role: 'admin' | 'member') {
+    const jwt = require('jsonwebtoken')
+    const secret = process.env.JWT_SECRET || 'test-secret'
+    
+    return jwt.sign(
+      {
+        userId,
+        memberType: role === 'admin' ? 'admin' : 'REGULAR',
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours
+      },
+      secret
+    )
+  },
+
+  /**
+   * Create auth headers for API requests
+   */
+  createAuthHeaders(token: string) {
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  },
+
+  /**
+   * Create workflow factory
+   */
+  factories: {
+    createWorkflow: (overrides: any = {}) => ({
+      id: `workflow-${Date.now()}`,
+      name: 'Test Workflow',
+      type: 'member_onboarding',
+      description: 'Test workflow description',
+      isEnabled: true,
+      hubSpotWorkflowId: `hs-workflow-${Date.now()}`,
+      steps: [],
+      triggers: ['member_signup'],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides
+    }),
+
+    createWorkflowExecution: (workflowId: string, contactId: string, overrides: any = {}) => ({
+      id: `exec-${Date.now()}`,
+      workflowId,
+      contactId,
+      status: 'RUNNING',
+      hubSpotExecutionId: `hs-exec-${Date.now()}`,
+      currentStep: 0,
+      enrolledAt: new Date(),
+      completedAt: null,
+      errorMessage: null,
+      executionData: { steps: [] },
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides
+    }),
+
+    createUser: (overrides: any = {}) => ({
+      id: `user-${Date.now()}`,
+      firstName: 'Test',
+      lastName: 'User',
+      email: `test${Date.now()}@example.com`,
+      memberType: 'REGULAR',
+      company: 'Test Company',
+      phone: '+1-555-0000',
+      isVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides
+    }),
+
+    createEvent: (overrides: any = {}) => ({
+      id: `event-${Date.now()}`,
+      title: 'Test Event',
+      description: 'Test event description',
+      date: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+      location: 'Test Location',
+      maxCapacity: 50,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides
+    })
+  },
+
+  /**
+   * Performance test data creation
+   */
+  async createPerformanceData(workflowCount: number = 100, executionCount: number = 1000) {
+    console.log(`Creating ${workflowCount} workflows and ${executionCount} executions for performance testing...`)
+    
+    const workflows = []
+    for (let i = 0; i < workflowCount; i++) {
+      const workflow = await this.createWorkflow({
+        name: `Performance Test Workflow ${i}`,
+        type: i % 2 === 0 ? 'member_onboarding' : 'event_followup',
+        isEnabled: i % 3 !== 0 // 2/3 enabled
+      })
+      workflows.push(workflow)
+    }
+    
+    const executions = []
+    for (let i = 0; i < executionCount; i++) {
+      const workflowIndex = i % workflows.length
+      const execution = await this.createWorkflowExecution(
+        workflows[workflowIndex].id,
+        `perf-contact-${i}`,
+        {
+          status: i % 4 === 0 ? 'FAILED' : i % 3 === 0 ? 'RUNNING' : 'COMPLETED'
+        }
+      )
+      executions.push(execution)
+    }
+    
+    console.log('Performance test data created successfully')
+    return { workflows, executions }
+  }
+}

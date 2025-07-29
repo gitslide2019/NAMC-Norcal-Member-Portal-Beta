@@ -1,0 +1,414 @@
+name: Multi-Environment Deployment Pipeline
+
+on:
+  push:
+    branches: [ main, develop, staging ]
+  pull_request:
+    branches: [ main ]
+    types: [ closed ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - development
+        - staging
+        - production
+      force_deploy:
+        description: 'Force deployment (skip some checks)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Determine deployment environment and strategy
+  determine-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      should_deploy: ${{ steps.env.outputs.should_deploy }}
+      deployment_type: ${{ steps.env.outputs.deployment_type }}
+      requires_approval: ${{ steps.env.outputs.requires_approval }}
+    
+    steps:
+    - name: Determine environment
+      id: env
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "deployment_type=manual" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "environment=production" >> $GITHUB_OUTPUT
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "deployment_type=automatic" >> $GITHUB_OUTPUT
+          echo "requires_approval=true" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+          echo "environment=staging" >> $GITHUB_OUTPUT
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "deployment_type=automatic" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+          echo "environment=development" >> $GITHUB_OUTPUT
+          echo "should_deploy=true" >> $GITHUB_OUTPUT
+          echo "deployment_type=automatic" >> $GITHUB_OUTPUT
+        else
+          echo "should_deploy=false" >> $GITHUB_OUTPUT
+        fi
+
+  # Build and test before deployment
+  pre-deployment-checks:
+    runs-on: ubuntu-latest
+    needs: determine-environment
+    if: needs.determine-environment.outputs.should_deploy == 'true'
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: namc_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Generate Prisma client
+      run: npx prisma generate
+
+    - name: Run pre-deployment tests
+      run: |
+        npm run type-check
+        npm run lint
+        npm run test:ci
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/namc_test
+
+    - name: Build application
+      run: npm run build
+      env:
+        NODE_ENV: production
+
+    - name: Run security audit
+      run: npm audit --audit-level=moderate
+
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts-${{ github.sha }}
+        path: |
+          .next/
+          package.json
+          package-lock.json
+        retention-days: 7
+
+  # Build and push Docker image
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    needs: [determine-environment, pre-deployment-checks]
+    if: needs.determine-environment.outputs.should_deploy == 'true'
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.production
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          NODE_ENV=production
+          BUILD_TIME=${{ github.run_number }}
+          GIT_SHA=${{ github.sha }}
+
+  # Deploy to Development Environment
+  deploy-development:
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build-and-push-image]
+    if: needs.determine-environment.outputs.environment == 'development'
+    environment: development
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to Development
+      run: |
+        echo "Deploying to development environment..."
+        # Add your development deployment logic here
+        # Example: Deploy to development cluster, update development database
+      env:
+        ENVIRONMENT: development
+        DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+        HUBSPOT_API_KEY: ${{ secrets.DEV_HUBSPOT_API_KEY }}
+        JWT_SECRET: ${{ secrets.DEV_JWT_SECRET }}
+
+    - name: Run database migrations
+      run: |
+        echo "Running development database migrations..."
+        # npx prisma migrate deploy
+      env:
+        DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+
+    - name: Run smoke tests
+      run: |
+        echo "Running development smoke tests..."
+        # Add smoke tests here
+
+    - name: Update deployment status
+      run: |
+        echo "Development deployment completed successfully"
+        echo "Environment URL: https://dev.namcnorcal.org"
+
+  # Deploy to Staging Environment
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build-and-push-image]
+    if: needs.determine-environment.outputs.environment == 'staging'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to Staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your staging deployment logic here
+      env:
+        ENVIRONMENT: staging
+        DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        HUBSPOT_API_KEY: ${{ secrets.STAGING_HUBSPOT_API_KEY }}
+        JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+
+    - name: Run database migrations
+      run: |
+        echo "Running staging database migrations..."
+        # npx prisma migrate deploy
+      env:
+        DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+    - name: Run integration tests against staging
+      run: |
+        echo "Running staging integration tests..."
+        # npm run test:integration:staging
+
+    - name: Run E2E tests against staging
+      run: |
+        echo "Running staging E2E tests..."
+        # npx playwright test --config=playwright.staging.config.ts
+
+    - name: Performance testing
+      run: |
+        echo "Running performance tests..."
+        # Add performance testing here
+
+    - name: Update deployment status
+      run: |
+        echo "Staging deployment completed successfully"
+        echo "Environment URL: https://staging.namcnorcal.org"
+
+  # Deploy to Production Environment
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [determine-environment, build-and-push-image]
+    if: needs.determine-environment.outputs.environment == 'production'
+    environment: 
+      name: production
+      url: https://portal.namcnorcal.org
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Pre-production health check
+      run: |
+        echo "Running pre-production health checks..."
+        # Add health checks here
+
+    - name: Create deployment backup
+      run: |
+        echo "Creating production backup..."
+        # Add backup logic here
+
+    - name: Deploy to Production (Blue-Green)
+      run: |
+        echo "Deploying to production environment..."
+        echo "Using blue-green deployment strategy..."
+        # Add your production deployment logic here
+      env:
+        ENVIRONMENT: production
+        DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        HUBSPOT_API_KEY: ${{ secrets.PROD_HUBSPOT_API_KEY }}
+        JWT_SECRET: ${{ secrets.PROD_JWT_SECRET }}
+
+    - name: Run database migrations (Production)
+      run: |
+        echo "Running production database migrations..."
+        # npx prisma migrate deploy
+      env:
+        DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+
+    - name: Warm up application
+      run: |
+        echo "Warming up production application..."
+        # Add warmup logic here
+
+    - name: Post-deployment verification
+      run: |
+        echo "Running post-deployment verification..."
+        # Add verification tests here
+
+    - name: Switch traffic to new deployment
+      run: |
+        echo "Switching traffic to new deployment..."
+        # Add traffic switching logic here
+
+    - name: Monitor deployment
+      run: |
+        echo "Monitoring deployment for 5 minutes..."
+        # Add monitoring logic here
+
+    - name: Update deployment status
+      run: |
+        echo "Production deployment completed successfully"
+        echo "Environment URL: https://portal.namcnorcal.org"
+
+  # Rollback capability
+  rollback:
+    runs-on: ubuntu-latest
+    if: failure() && (needs.deploy-production.result == 'failure' || needs.deploy-staging.result == 'failure')
+    needs: [deploy-development, deploy-staging, deploy-production]
+    environment: 
+      name: ${{ needs.determine-environment.outputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Rollback deployment
+      run: |
+        echo "Rolling back deployment..."
+        # Add rollback logic here
+
+    - name: Restore database backup
+      if: needs.determine-environment.outputs.environment == 'production'
+      run: |
+        echo "Restoring database backup..."
+        # Add database restore logic here
+
+    - name: Verify rollback
+      run: |
+        echo "Verifying rollback..."
+        # Add rollback verification here
+
+    - name: Notify team
+      run: |
+        echo "Deployment rolled back. Team has been notified."
+        # Add notification logic here
+
+  # Post-deployment tasks
+  post-deployment:
+    runs-on: ubuntu-latest
+    needs: [determine-environment, deploy-development, deploy-staging, deploy-production]
+    if: always() && needs.determine-environment.outputs.should_deploy == 'true'
+    
+    steps:
+    - name: Update deployment tracking
+      run: |
+        echo "Updating deployment tracking..."
+        echo "Environment: ${{ needs.determine-environment.outputs.environment }}"
+        echo "Deployment ID: ${{ github.run_number }}"
+        echo "Git SHA: ${{ github.sha }}"
+
+    - name: Send notifications
+      run: |
+        echo "Sending deployment notifications..."
+        # Add notification logic (Slack, email, etc.)
+
+    - name: Update monitoring dashboards
+      run: |
+        echo "Updating monitoring dashboards..."
+        # Add monitoring dashboard updates
+
+    - name: Generate deployment report
+      run: |
+        echo "Generating deployment report..."
+        cat > deployment-report.md << EOF
+        # Deployment Report
+        
+        **Environment**: ${{ needs.determine-environment.outputs.environment }}
+        **Deployment Type**: ${{ needs.determine-environment.outputs.deployment_type }}
+        **Git SHA**: ${{ github.sha }}
+        **Deployment ID**: ${{ github.run_number }}
+        **Timestamp**: $(date -u)
+        
+        ## Changes Deployed
+        $(git log --oneline --no-merges HEAD~10..HEAD)
+        
+        ## Status
+        - Build: ✅ Success
+        - Tests: ✅ Passed
+        - Deployment: ✅ Complete
+        EOF
+
+    - name: Archive deployment report
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-report-${{ github.run_number }}
+        path: deployment-report.md

@@ -35,7 +35,16 @@ interface UIActions {
   toggleModal: (modalId: string) => void
 }
 
-export type UIStore = UIState & UIActions
+// Add hydration state
+interface UIStateWithHydration extends UIState {
+  hasHydrated: boolean
+}
+
+interface UIActionsWithHydration extends UIActions {
+  setHasHydrated: (hasHydrated: boolean) => void
+}
+
+export type UIStore = UIStateWithHydration & UIActionsWithHydration
 
 export const useUIStore = create<UIStore>()(
   persist(
@@ -46,9 +55,11 @@ export const useUIStore = create<UIStore>()(
       notifications: [],
       loading: {},
       modals: {},
+      hasHydrated: false,
 
       // Actions
       setTheme: (theme) => set({ theme }),
+      setHasHydrated: (hasHydrated) => set({ hasHydrated }),
 
       toggleSidebar: () => set((state) => ({ 
         sidebarOpen: !state.sidebarOpen 
@@ -68,8 +79,8 @@ export const useUIStore = create<UIStore>()(
           notifications: [...state.notifications, newNotification]
         }))
 
-        // Auto-remove notification after duration
-        if (newNotification.duration && newNotification.duration > 0) {
+        // Only set timeout on client side after hydration
+        if (typeof window !== 'undefined' && newNotification.duration && newNotification.duration > 0) {
           setTimeout(() => {
             get().removeNotification(id)
           }, newNotification.duration)
@@ -108,7 +119,10 @@ export const useUIStore = create<UIStore>()(
       partialize: (state) => ({
         theme: state.theme,
         sidebarOpen: state.sidebarOpen
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true)
+      }
     }
   )
 )

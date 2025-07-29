@@ -277,7 +277,8 @@ export class CSRFProtection {
   static async cleanupExpiredTokens(): Promise<void> {
     // Redis handles TTL automatically, but we need to clean up fallback storage
     const now = Date.now()
-    for (const [sessionId, data] of this.fallbackTokens.entries()) {
+    const entries = Array.from(this.fallbackTokens.entries())
+    for (const [sessionId, data] of entries) {
       if (now > data.expires) {
         this.fallbackTokens.delete(sessionId)
       }
@@ -530,14 +531,16 @@ setInterval(async () => {
   
   // Clean up old rate limit data (fallback only)
   const now = Date.now()
-  for (const [key, data] of rateLimitFallbackStore.entries()) {
+  const entries = Array.from(rateLimitFallbackStore.entries())
+  for (const [key, data] of entries) {
     if (now > data.resetTime) {
       rateLimitFallbackStore.delete(key)
     }
   }
   
   // Clean up old suspicious activity data (fallback only)
-  for (const [ip, activity] of fallbackSuspiciousActivity.entries()) {
+  const suspiciousEntries = Array.from(fallbackSuspiciousActivity.entries())
+  for (const [ip, activity] of suspiciousEntries) {
     if (now - activity.lastActivity > 24 * 60 * 60 * 1000) { // 24 hours
       fallbackSuspiciousActivity.delete(ip)
     }

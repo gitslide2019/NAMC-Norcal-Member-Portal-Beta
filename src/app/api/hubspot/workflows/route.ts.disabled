@@ -1,0 +1,378 @@
+/**
+ * HubSpot Workflows API Routes
+ * 
+ * RESTful API endpoints for HubSpot workflow management:
+ * - CRUD operations for workflows
+ * - Workflow execution and monitoring
+ * - Integration with NAMC business logic
+ * - Comprehensive error handling and validation
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { PrismaClient } from '@prisma/client'
+import { HubSpotWorkflowRepository } from '@/lib/repositories/hubspot-workflow.repository'
+import { hubspotWorkflowsService } from '@/features/hubspot/services'
+import { authenticateRequest, requireAdminAccess } from '@/lib/auth/middleware'
+import { createApiResponse, ApiError } from '@/lib/api/response'
+import { validateRequestBody } from '@/lib/api/validation'
+import { rateLimit } from '@/lib/api/rate-limiting'
+
+const prisma = new PrismaClient()
+const workflowRepository = new HubSpotWorkflowRepository(prisma)
+
+// Validation schemas
+const CreateWorkflowSchema = z.object({
+  name: z.string().min(1).max(255),
+  description: z.string().optional(),
+  type: z.enum([
+    'member_onboarding',
+    'member_lifecycle', 
+    'project_matching',
+    'service_request',
+    'event_engagement',
+    'renewal_management',
+    'risk_intervention',
+    'training_pathway',
+    'committee_engagement',
+    'donor_cultivation',
+    'staff_task_automation',
+    'member_communication'
+  ]),
+  enrollmentCriteria: z.object({
+    propertyFilters: z.array(z.object({
+      propertyName: z.string(),
+      operator: z.string(),
+      value: z.any(),
+      propertyType: z.string().optional()
+    })),
+    listMemberships: z.array(z.string()).optional(),
+    customCriteria: z.record(z.any()).optional()
+  }),
+  workflowDefinition: z.object({
+    steps: z.array(z.object({
+      id: z.string(),
+      stepNumber: z.number(),
+      stepType: z.string(),
+      name: z.string(),
+      description: z.string().optional(),
+      delay: z.object({
+        type: z.string(),
+        value: z.number(),
+        unit: z.string()
+      }).optional(),
+      conditions: z.array(z.any()).optional(),
+      action: z.record(z.any()),
+      branches: z.array(z.any()).optional()
+    })),
+    goalCriteria: z.object({
+      propertyName: z.string(),
+      operator: z.string(),
+      value: z.any()
+    }).optional()
+  }),
+  isEnabled: z.boolean().default(false),
+  reenrollmentEnabled: z.boolean().default(false),
+  allowMultipleEnrollments: z.boolean().default(false),
+  executionTimeout: z.number().min(1000).max(300000).default(30000),
+  retryAttempts: z.number().min(0).max(10).default(3),
+  batchSize: z.number().min(1).max(1000).default(50)
+})
+
+const UpdateWorkflowSchema = CreateWorkflowSchema.partial()
+
+const ListWorkflowsSchema = z.object({
+  type: z.string().optional(),
+  status: z.string().optional(),
+  isEnabled: z.string().optional(),
+  searchTerm: z.string().optional(),
+  limit: z.string().optional(),
+  offset: z.string().optional()
+})
+
+/**
+ * GET /api/hubspot/workflows
+ * List workflows with filtering and pagination
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 100, windowMs: 60000 })
+
+    // Authenticate request
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+
+    // Parse and validate query parameters
+    const url = new URL(request.url)
+    const queryParams = Object.fromEntries(url.searchParams)
+    const { type, status, isEnabled, searchTerm, limit, offset } = ListWorkflowsSchema.parse(queryParams)
+
+    // Build filters
+    const filters: any = {}
+    if (type) filters.type = type
+    if (status) filters.status = status
+    if (isEnabled !== undefined) filters.isEnabled = isEnabled === 'true'
+    if (searchTerm) filters.searchTerm = searchTerm
+
+    // Get workflows from repository
+    const result = await workflowRepository.listWorkflows(
+      filters,
+      limit ? parseInt(limit) : 50,
+      offset ? parseInt(offset) : 0
+    )
+
+    return createApiResponse({
+      workflows: result.workflows,
+      pagination: {
+        total: result.total,
+        limit: limit ? parseInt(limit) : 50,
+        offset: offset ? parseInt(offset) : 0,
+        hasMore: result.total > (parseInt(offset || '0') + parseInt(limit || '50'))
+      }
+    })
+  } catch (error) {
+    console.error('GET /api/hubspot/workflows error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to fetch workflows', 500)
+  }
+}
+
+/**
+ * POST /api/hubspot/workflows
+ * Create a new workflow
+ */
+export async function POST(request: NextRequest) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 20, windowMs: 60000 })
+
+    // Authenticate and require admin access
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+    
+    await requireAdminAccess(user)
+
+    // Validate request body
+    const body = await validateRequestBody(request, CreateWorkflowSchema)
+
+    // Create workflow in local database
+    const workflowData = {
+      ...body,
+      status: 'DRAFT' as const,
+      totalEnrollments: 0,
+      activeEnrollments: 0,
+      completedEnrollments: 0,
+      conversionRate: 0,
+      successRate: 0,
+      createdBy: user.id
+    }
+
+    const workflow = await workflowRepository.createWorkflow(workflowData)
+
+    // Sync with HubSpot if enabled
+    if (body.isEnabled) {
+      try {
+        const hubspotResponse = await hubspotWorkflowsService.createWorkflow({
+          name: workflow.name,
+          type: workflow.type,
+          enabled: workflow.isEnabled,
+          enrollmentTriggers: workflow.enrollmentCriteria,
+          actions: workflow.workflowDefinition.steps.map(step => ({
+            type: step.stepType,
+            delay: step.delay,
+            filters: step.conditions || [],
+            body: step.action
+          })),
+          goalCriteria: workflow.workflowDefinition.goalCriteria
+        })
+
+        if (hubspotResponse.success) {
+          // Update local record with HubSpot ID
+          await workflowRepository.updateWorkflow(workflow.id, {
+            hubspotWorkflowId: hubspotResponse.data?.id,
+            status: 'ACTIVE',
+            lastSyncAt: new Date()
+          })
+        }
+      } catch (syncError) {
+        console.error('Failed to sync workflow with HubSpot:', syncError)
+        // Continue with local creation even if HubSpot sync fails
+      }
+    }
+
+    return createApiResponse(workflow, true, 'Workflow created successfully', 201)
+  } catch (error) {
+    console.error('POST /api/hubspot/workflows error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to create workflow', 500)
+  }
+}
+
+/**
+ * PUT /api/hubspot/workflows/[id]
+ * Update an existing workflow
+ */
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 30, windowMs: 60000 })
+
+    // Authenticate and require admin access
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+    
+    await requireAdminAccess(user)
+
+    const workflowId = params.id
+    if (!workflowId) {
+      throw new ApiError('Workflow ID is required', 400)
+    }
+
+    // Validate request body
+    const body = await validateRequestBody(request, UpdateWorkflowSchema)
+
+    // Check if workflow exists
+    const existingWorkflow = await workflowRepository.getWorkflowById(workflowId)
+    if (!existingWorkflow) {
+      throw new ApiError('Workflow not found', 404)
+    }
+
+    // Update workflow in local database
+    const updateData = {
+      ...body,
+      updatedBy: user.id
+    }
+
+    const updatedWorkflow = await workflowRepository.updateWorkflow(workflowId, updateData)
+
+    // Sync with HubSpot if workflow has HubSpot ID
+    if (updatedWorkflow.hubspotWorkflowId) {
+      try {
+        const hubspotResponse = await hubspotWorkflowsService.updateWorkflow(
+          updatedWorkflow.hubspotWorkflowId,
+          {
+            name: updatedWorkflow.name,
+            enabled: updatedWorkflow.isEnabled,
+            enrollmentTriggers: updatedWorkflow.enrollmentCriteria,
+            actions: updatedWorkflow.workflowDefinition.steps.map(step => ({
+              type: step.stepType,
+              delay: step.delay,
+              filters: step.conditions || [],
+              body: step.action
+            }))
+          }
+        )
+
+        if (hubspotResponse.success) {
+          await workflowRepository.updateWorkflow(workflowId, {
+            lastSyncAt: new Date()
+          })
+        }
+      } catch (syncError) {
+        console.error('Failed to sync workflow update with HubSpot:', syncError)
+        // Continue with local update even if HubSpot sync fails
+      }
+    }
+
+    return createApiResponse(updatedWorkflow, true, 'Workflow updated successfully')
+  } catch (error) {
+    console.error('PUT /api/hubspot/workflows/[id] error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to update workflow', 500)
+  }
+}
+
+/**
+ * DELETE /api/hubspot/workflows/[id]
+ * Delete a workflow
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Apply rate limiting
+    await rateLimit(request, { limit: 10, windowMs: 60000 })
+
+    // Authenticate and require admin access
+    const user = await authenticateRequest(request)
+    if (!user) {
+      throw new ApiError('Authentication required', 401)
+    }
+    
+    await requireAdminAccess(user)
+
+    const workflowId = params.id
+    if (!workflowId) {
+      throw new ApiError('Workflow ID is required', 400)
+    }
+
+    // Check if workflow exists
+    const existingWorkflow = await workflowRepository.getWorkflowById(workflowId)
+    if (!existingWorkflow) {
+      throw new ApiError('Workflow not found', 404)
+    }
+
+    // Check if workflow has active executions
+    const activeExecutions = await workflowRepository.listExecutions(
+      { workflowId, status: ['RUNNING', 'PENDING'] },
+      1
+    )
+
+    if (activeExecutions.total > 0) {
+      throw new ApiError(
+        'Cannot delete workflow with active executions. Disable the workflow first.',
+        409
+      )
+    }
+
+    // Delete from HubSpot if workflow has HubSpot ID
+    if (existingWorkflow.hubspotWorkflowId) {
+      try {
+        await hubspotWorkflowsService.deleteWorkflow(existingWorkflow.hubspotWorkflowId)
+      } catch (syncError) {
+        console.error('Failed to delete workflow from HubSpot:', syncError)
+        // Continue with local deletion even if HubSpot deletion fails
+      }
+    }
+
+    // Delete workflow from local database
+    await workflowRepository.deleteWorkflow(workflowId)
+
+    return createApiResponse(
+      { id: workflowId },
+      true,
+      'Workflow deleted successfully'
+    )
+  } catch (error) {
+    console.error('DELETE /api/hubspot/workflows/[id] error:', error)
+    
+    if (error instanceof ApiError) {
+      return createApiResponse(null, false, error.message, error.statusCode)
+    }
+    
+    return createApiResponse(null, false, 'Failed to delete workflow', 500)
+  }
+}
